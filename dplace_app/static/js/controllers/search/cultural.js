@@ -24,13 +24,17 @@ function CulturalCtrl($scope, searchModelService, Variable, CodeDescription) {
     // Expects an array of CulturalTraitModel objects
     $scope.getSelectedTraitCodes = function(traits) {
         var allCodes = Array.prototype.concat.apply([], traits.map( function(trait) { return trait.codes; }));
-        var selectedCodes = allCodes.filter( function(c) { return c.isSelected; }).map( function(c) { return c.id; })
+        var selectedCodes = allCodes.filter( function(c) { return c.isSelected; }).map( function(c) { return c.id; });
         return selectedCodes;
     };
 
     $scope.traitCodeSelectionChanged = function(trait) {
         trait.badgeValue = trait.codes.filter(function(code) { return code.isSelected; }).length;
     };
+	
+	$scope.selectAllChanged = function(trait) { //this doesn't work
+		angular.forEach(trait.codes, function(code){ code.isSelected = true; });
+	};
 
     // wired to the search button. Gets the code ids, adds cultural to the query, and invokes the search
     $scope.doSearch = function() {

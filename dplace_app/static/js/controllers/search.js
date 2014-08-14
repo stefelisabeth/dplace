@@ -79,9 +79,10 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties, 
         }
     };
 
-    var errorCallBack = function(httpResponse) {
-	$scope.errors = httpResponse.data;
+    var errorCallBack = function() {
+	$scope.errors = "Invalid input."; //not sure if this is needed anymore
 	$scope.enableSearchButton();
+  
     };
     var searchCompletedCallback = function() {
         $scope.enableSearchButton();
@@ -92,13 +93,16 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties, 
 
     $scope.searchSocieties = function() {
         $scope.disableSearchButton();
+		$scope.errors = "";
         var query = $scope.searchModel.query;
         $scope.searchModel.results = FindSocieties.find(query, searchCompletedCallback, errorCallBack);
     };
 
     // resets this object state and the search query.
     $scope.resetSearch = function() {
+		$scope.submitted = false;
         $scope.searchModel.reset();
+		$scope.errors = "";
         // send a notification so that the individual controllers reload their state
         $scope.$broadcast('searchModelReset');
     };
