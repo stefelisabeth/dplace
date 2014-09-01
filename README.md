@@ -14,6 +14,7 @@ Additional prototypes are under dvelopment for HTML-based [geographic search](dp
 
 For easy installation of a development VM using [Vagrant](http://vagrantup.com), please see [dplace-vagrant](https://github.com/dleehr/dplace-vagrant)
 
+=======
 # D-PLACE  [![Build Status](https://travis-ci.org/NESCent/dplace.svg?branch=master)](https://travis-ci.org/NESCent/dplace) [![Dependency Status](https://gemnasium.com/NESCent/dplace.svg)](https://gemnasium.com/NESCent/dplace)
 
 ## Synopsis
