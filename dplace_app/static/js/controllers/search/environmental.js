@@ -16,26 +16,18 @@ function EnvironmentalCtrl($scope, searchModelService) {
         }];
         return filters;
     };
-	
+
     $scope.variableChanged = function(variable) {
-		$scope.submitted = false;
         if(variable != null) {
             $scope.environmentalData.badgeValue = 1;
         } else {
             $scope.environmentalData.badgeValue = 0;
         }
     };
-	
     $scope.doSearch = function() {
 		$scope.submitted = true;
-<<<<<<< HEAD
-		var filters = getSelectedFilters();
-		$scope.updateSearchQuery({ environmental_filters: filters });
-		$scope.searchSocieties();
-=======
         var filters = getSelectedFilters();
         $scope.updateSearchQuery({ environmental_filters: filters });
         $scope.searchSocieties();
->>>>>>> upstream/master
     };
 }

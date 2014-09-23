@@ -1,14 +1,12 @@
 function LanguageCtrl($scope, searchModelService, LanguageClass, LanguageClassification) {
-	var linkModel = function() {
+    var linkModel = function() {
         // Get a reference to the language classifications from the model
         $scope.languageClassifications = searchModelService.getModel().getLanguageClassifications();
-		selected = [];
-	};
+    };
     $scope.$on('searchModelReset', linkModel); // When model is reset, update our model
     linkModel();
 
     var levels = $scope.languageClassifications.levels;
-	var selected = [];
 
     function levelToIndex(levelObject) {
         return levelObject.level - 1;
@@ -55,7 +53,7 @@ function LanguageCtrl($scope, searchModelService, LanguageClass, LanguageClassif
     }
 
     $scope.selectionChanged = function(languageFilter, levelObject) {
-		var changedIndex = levelToIndex(levelObject);
+        var changedIndex = levelToIndex(levelObject);
         var parentObject = selectedItemAtLevel(languageFilter, levelObject);
         if(changedIndex + 1 < levels.length) {
             // Update the next level
@@ -68,20 +66,17 @@ function LanguageCtrl($scope, searchModelService, LanguageClass, LanguageClassif
         }
         updateClassifications(languageFilter);
     };
-	
+
 	$scope.selectAllChanged = function(languageFilter) {
-		if (languageFilter.classifications.id.isSelected) {	
+		if (languageFilter.classifications.id.isSelected) {
 			languageFilter.classifications.forEach(function(classification) {
-			classification.isSelected = true; 
-			selected.push(classification);
-			$scope.languageClassifications.badgeValue++;
-			
-			});
-	
+			    classification.isSelected = true;
+			    $scope.languageClassifications.selected.push(classification);
+			    $scope.languageClassifications.badgeValue++;
+            });
 		} else {
-			angular.forEach(languageFilter.classifications, function(classification){classification.isSelected = false; $scope.languageClassifications.badgeValue--;});
-		}
-		//alert(languageFilter.classifications.id);
+			languageFilter.classifications.forEach(function(classification){ classification.isSelected = false; $scope.languageClassifications.badgeValue--;} );
+        }
 	};
 
     function getSelectedLanguageClassifications(languageFilter) {
@@ -94,25 +89,17 @@ function LanguageCtrl($scope, searchModelService, LanguageClass, LanguageClassif
         var languageQueryFilters = [];
         $scope.languageClassifications.languageFilters.forEach(function(languageFilter) {
             var selectedClassifications = getSelectedLanguageClassifications(languageFilter);
-            var languageIds = selectedClassifications.map(function (classification) { return classification.language.id; });
-            //languageQueryFilters.push({language_ids: languageIds});
-			selectedClassifications.forEach(function(f) {
-				selected.push(f);
-			});
+            selectedClassifications.forEach(function(f) {
+                $scope.languageClassifications.selected.push(f);
+            });
 	   });
         return languageQueryFilters;
     };
-	
+
     $scope.classificationSelectionChanged = function(classification) {
         // Since the selections are stored deep in the model, this is greatly simplified by +1 / -1
         // get the currently selected languages and add them to the "selected" array
 		currentSelection = $scope.getLanguageQueryFilters();
-		currentSelection.forEach(function(c) {
-			if (selected.indexOf(c) == -1) {
-				selected.push(c);
-			}
-		});
-
         if(classification.isSelected) {
             $scope.languageClassifications.badgeValue++;
         } else {
@@ -123,8 +110,7 @@ function LanguageCtrl($scope, searchModelService, LanguageClass, LanguageClassif
     $scope.doSearch = function() {
 	//the selected array contains all languages that were selected (even if they were then unselected)
 	//so we filter the selected array so we only search for currently selected languages
-		var filters = selected.filter(function(classification) { return classification.isSelected; }).map(function(c) { return {language_ids:[c.language.id]}; });
-	  // var filters = $scope.getLanguageQueryFilters();
+		var filters = $scope.languageClassifications.selected.filter(function(classification) { return classification.isSelected; }).map(function(c) { return {language_ids:[c.language.id]}; });
         $scope.updateSearchQuery({ language_filters: filters });
         $scope.searchSocieties();
     };
