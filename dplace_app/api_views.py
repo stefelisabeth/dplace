@@ -126,7 +126,6 @@ def get_bins(request):
     else:
         bins = None
     return Response(bins)
-    
 
 def result_set_from_query_dict(query_dict):
     result_set = SocietyResultSet()
@@ -304,4 +303,3 @@ def csv_download(request):
     filename = "dplace-societies-%s.csv" % datetime.datetime.now().strftime("%Y-%m-%d")
     response['Content-Disposition']  = 'attachment; filename="%s"' % filename
     return response
-    
