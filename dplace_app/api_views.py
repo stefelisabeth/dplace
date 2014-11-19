@@ -175,13 +175,6 @@ def result_set_from_query_dict(query_dict):
             elif operator == 'lt':
                 values = values.filter(value__lt=filter['params'][0])
             values = values.select_related('variable','environmental__society')
-            if operator == 'all':
-                bins = bin_data(values)
-                for value in values:
-                    for b in bins:
-                        if float(value.value) < float(b['max']):
-                            value.value = b['code']
-                            break
             # get the societies from the values
             for value in values:
                 result_set.add_environmental(value.society(), value.variable, value)
