@@ -1,4 +1,4 @@
-angular.module('dplace', ['ngRoute', 'dplaceServices', 'ui.bootstrap', 'dplaceFilters', 'dplaceMapDirective']) // Should look at ui-router
+angular.module('dplace', ['ngRoute', 'dplaceServices', 'ui.bootstrap', 'dplaceFilters', 'dplaceMapDirective', 'languagePhylogenyDirective']) // Should look at ui-router
     .config(dplaceRouter);
 
 function dplaceRouter($routeProvider) {
@@ -14,10 +14,6 @@ function dplaceRouter($routeProvider) {
         .when('/about', {
             templateUrl: '/static/partials/about.html',
             controller: 'AboutCtrl'
-        })
-        .when('/tree', {
-            templateUrl: '/static/partials/tree.html',
-            controller: 'TreeCtrl'
         })
         .otherwise({
 	        redirectTo: '/about'
