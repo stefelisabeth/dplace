@@ -9,12 +9,26 @@
             <button class="btn btn-danger form-control"
                         ng-click="resetSearch()">Reset
             </button>
+            <span class="alert alert-danger" ng-show="errors">
+                {{ errors }}
+            </span> 
         </div>
     </span>
     <form class="form-inline" role="form">
         <div class="panel panel-default" ng-repeat="trait in traits">
             <div class="panel-heading">
                 <div class="row">
+                    <div class="form-group col-xs-4">
+                        <select
+                            ng-model="trait.selectedSource"
+                            class="form-control"
+                            ng-options='source as (source.author + " ("+source.year+")") for source in sources'
+                            >
+                            <option value="">Select a Source</option>
+                        </select>
+                     </div>
+                 </div>
+                <div class="row row-margin-top" ng-show="trait.selectedSource">
                     <div class="form-group col-xs-6">
                         <select
                                 ng-model="trait.selectedCategory"

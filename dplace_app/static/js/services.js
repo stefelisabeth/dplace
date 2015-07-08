@@ -4,7 +4,7 @@ angular.module('dplaceServices', ['ngResource'])
         $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     })
     .service('colorMapService', [ColorMapService])
-    .service('searchModelService',['VariableCategory','GeographicRegion','EnvironmentalVariable','LanguageClass',SearchModelService])
+    .service('searchModelService',['VariableCategory','GeographicRegion','EnvironmentalCategory', 'LanguageClass',SearchModelService])
     .factory('LanguageClass', function ($resource) {
         return $resource(
             '/api/v1/language_classes/:id',
@@ -17,6 +17,20 @@ angular.module('dplaceServices', ['ngResource'])
                     }
                 }
             });
+    })
+    .factory('Source', function ($resource) {
+        return $resource (
+            '/api/v1/sources/:id',
+            {page_size: 1000}, {
+                query: {
+                    method: 'GET',
+                    isArray: true,
+                    transformResponse: function(data, headers) {
+                        return JSON.parse(data).results;
+                    }
+                }
+            }
+        )
     })
     .factory('LanguageClassification', function ($resource) {
         return $resource(
@@ -39,6 +53,9 @@ angular.module('dplaceServices', ['ngResource'])
                     method: 'GET',
                     isArray: true,
                     transformResponse: function(data, headers) {
+                        if (!JSON.parse(data).results) {
+                            return [JSON.parse(data)];
+                        }
                         return JSON.parse(data).results;
                     }
                 }
@@ -59,12 +76,16 @@ angular.module('dplaceServices', ['ngResource'])
     })
     .factory('CodeDescription', function ($resource) {
         return $resource(
-            '/api/v1/codes/:id',
+            '/api/v1/codes/?variable=:variable',
             {page_size: 1000}, {
                 query: {
                     method: 'GET',
                     isArray: true,
                     transformResponse: function(data, headers) {
+                        if (!JSON.parse(data).results) {
+                            return [JSON.parse(data)];
+                        }
+                        
                         return JSON.parse(data).results;
                     }
                 }
@@ -72,7 +93,7 @@ angular.module('dplaceServices', ['ngResource'])
     })
     .factory('EnvironmentalValue', function($resource) {
         return $resource(
-            '/api/v1/environmental_values/?variable=:variable',
+            '/api/v1/environmental_values/:id',
             {}, {
                 query: {
                     method: 'GET',
@@ -83,6 +104,44 @@ angular.module('dplaceServices', ['ngResource'])
                 }
             }
         )
+    })
+    .factory('MinAndMax', function($resource) {
+        return $resource(
+            '/api/v1/min_and_max',
+            {}, {
+                query: {
+                    method: 'GET',
+                    isArray:false
+                }
+            }
+        )
+    })
+    .factory('BfContinuousVariable', function($resource) {
+        return $resource(
+            '/api/v1/bf_cont_variable',
+            {}, {
+                query: {
+                    method: 'GET',
+                    isArray:true,
+                    transformResponse: function(data, headers) {
+                        return JSON.parse(data);
+                    }
+                }
+            }
+        )
+    })
+    .factory('EnvironmentalCategory', function($resource) {
+        return $resource(
+            '/api/v1/environmental_categories/:id',
+            {}, {
+                query: {
+                    method: 'GET',
+                    isArray: true,
+                    transformResponse: function(data, headers) {
+                        return JSON.parse(data).results;
+                    }
+                }
+            });
     })
     .factory('EnvironmentalVariable', function ($resource) {
         return $resource(
@@ -120,6 +179,19 @@ angular.module('dplaceServices', ['ngResource'])
                 }
             });
     })
+    .factory('ZipTest', function($resource) {
+        return $resource(
+            '/api/v1/zip_legends',
+            {}, {
+                 
+                query: {
+                    method: 'GET',
+                    isArray:false,
+                }
+            }
+        )
+    })
+    //not used at the moment
     .factory('TreesFromLanguages', function($resource) {
         return $resource(
             '/api/v1/trees_from_languages',
@@ -127,41 +199,6 @@ angular.module('dplaceServices', ['ngResource'])
                 find: {
                     method: 'POST',
                     isArray: true
-                }
-            }
-        )
-    })
-   .factory('NewickTree', function($resource) {
-        return $resource(
-            '/api/v1/newick_tree/:id',
-            {}, {
-                query: {
-                    method: 'GET',
-                    isArray: false,
-                    transformResponse: function(data, headers) {
-                        return JSON.parse(data);
-                    }
-                }
-            });
-    })
-    .factory('GetBins', function($resource) {
-        return $resource(
-            '/api/v1/get_bins',
-            {}, {
-                query: {
-                    method: 'GET',
-                    isArray: true
-                }
-            }
-        )
-    })
-    .factory('getTree', function($resource) {
-        return $resource(
-            '/api/v1/get_trees',
-            {}, {
-                query: {
-                    method: 'GET',
-                    isArray: false
                 }
             }
         )

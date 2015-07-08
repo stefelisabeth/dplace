@@ -5,8 +5,9 @@ function AppCtrl($scope, $location, searchModelService) {
     $scope.setActive = function(tabName) {
         $scope.searchActive = '';
         $scope.societiesActive = '';
+        $scope.homeActive = '';
         $scope.aboutActive = '';
-        $scope.treeActive = '';
+        $scope.sourceInfoActive = '';
         $scope[tabName + 'Active'] = 'active'
     };
 

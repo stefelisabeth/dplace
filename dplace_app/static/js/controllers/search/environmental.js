@@ -1,4 +1,4 @@
-function EnvironmentalCtrl($scope, searchModelService, EnvironmentalValue) {
+function EnvironmentalCtrl($scope, searchModelService, EnvironmentalVariable, EnvironmentalValue, MinAndMax) {
     var linkModel = function() {
         // Get a reference to the environmental search params from the model
         $scope.environmentalData = searchModelService.getModel().getEnvironmentalData();
@@ -16,6 +16,12 @@ function EnvironmentalCtrl($scope, searchModelService, EnvironmentalValue) {
         }];
         return filters;
     };
+    
+    
+    $scope.categoryChanged = function(category) {
+        $scope.environmentalData.variables = EnvironmentalVariable.query({category: category.id});    
+        $scope.environmentalData.selectedVariable = '';
+    };
 
     $scope.variableChanged = function(variable) {
         if(variable != null) {
@@ -25,30 +31,30 @@ function EnvironmentalCtrl($scope, searchModelService, EnvironmentalValue) {
         }
         $scope.environmentalData.vals[0] = '';
         $scope.environmentalData.vals[1] = '';
-        
+        $scope.EnvironmentalForm.$setPristine();
         if ($scope.environmentalData.selectedFilter.operator == 'all') {
-            values = EnvironmentalValue.query({variable: $scope.environmentalData.selectedVariable.id});
-            min_value = 0, max_value = 0;
+            $scope.filterChanged();
+            values = MinAndMax.query({query: {environmental_id: $scope.environmentalData.selectedVariable.id}});
             values.$promise.then(function(result) {
-                for (var i = 0; i < result.length; i++) {
-                    if (result[i].value < min_value) min_value = result[i].value;
-                    else if (result[i].value > max_value) max_value = result[i].value;
-                }
-            $scope.environmentalData.vals[0] = min_value;
-            $scope.environmentalData.vals[1] = max_value;
+                $scope.environmentalData.vals[0] = result.min;
+                $scope.environmentalData.vals[1] = result.max;
             });
         }
     };
     
     $scope.filterChanged = function() {
-        if ($scope.environmentalData.selectedFilter.operator != 'all') {
-            return;
-        } else {
-            // Place the min/max values into the text fields as placeholders.
-            EnvironmentalValue.query({variable: $scope.environmentalData.selectedVariable.id}, function(results) {
-                var extractedValues = results.map(function(o) { return o.value; });
-                $scope.environmentalData.vals[0] = Math.min.apply(null, extractedValues);
-                $scope.environmentalData.vals[1] = Math.max.apply(null, extractedValues);
+        if ($scope.environmentalData.selectedFilter.operator != 'all') return;
+        else {
+            values = MinAndMax.query({query: {environmental_id: $scope.environmentalData.selectedVariable.id}});
+            values.$promise.then(function(result) {
+            if ($scope.environmentalData.selectedVariable.name.indexOf('Richness') != -1 || $scope.environmentalData.selectedVariable.name == 'Elevation' || $scope.environmentalData.selectedVariable.name =='Slope') {
+                $scope.environmentalData.vals[0] = result.min.toFixed(2);
+                $scope.environmentalData.vals[1] = result.max.toFixed(2);
+            } else {
+            
+                $scope.environmentalData.vals[0] = result.min.toFixed(4);
+                $scope.environmentalData.vals[1] = result.max.toFixed(4);
+            }
             });
         }
     };
@@ -58,5 +64,6 @@ function EnvironmentalCtrl($scope, searchModelService, EnvironmentalValue) {
         var filters = getSelectedFilters();
         $scope.updateSearchQuery({ environmental_filters: filters });
         $scope.searchSocieties();
+
     };
 }

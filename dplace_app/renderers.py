@@ -10,6 +10,7 @@ class DPLACECSVResults(object):
                             'ISO code', 'Language name']
         self.rows = []
         self.parse()
+        self.encode_field_names()
         self.flatten()
 
     def field_names_for_cultural_variable(self, variable):
@@ -38,6 +39,10 @@ class DPLACECSVResults(object):
                 self.field_map['environmental_variables'][v['id']] = field_names
                 self.field_names.append(field_names['name'])
 
+    def encode_field_names(self):
+        # Field names must also be utf-8 encoded
+        self.field_names = [field.encode("utf-8") for field in self.field_names]
+
     def flatten(self):
     # data is a dictionary with a list of societies
         for item in self.data['societies']:
@@ -46,11 +51,13 @@ class DPLACECSVResults(object):
             society = item['society']
             row['Society name'] = society['name']
             row['Society source'] = society['source']
-            row['Longitude'] = society['location']['coordinates'][0]
-            row['Latitude'] = society['location']['coordinates'][1]
+            row['Longitude'] = "" if society['location'] is None else society['location']['coordinates'][0]
+            row['Latitude'] = "" if society['location'] is None else society['location']['coordinates'][1]
             row['ISO code'] = society['iso_code']
             if society['language'] is not None and 'name' in society['language']:
                 row['Language name'] = society['language']['name']
+            else:
+                row['Language name'] = ""
             # geographic - only one
             geographic_regions = item['geographic_regions']
             if len(geographic_regions) == 1:
@@ -76,11 +83,15 @@ class DPLACECSVResults(object):
             #
             self.rows.append(row)
 
+def encode_if_text(val):
+    return val.encode('utf-8') if isinstance(val, text_type) else val
+
 def encode_rowdict(rowdict):
     encoded = dict()
     for k in rowdict:
+        encoded_k = encode_if_text(k)
         elem = rowdict[k]
-        encoded[k] = elem.encode('utf-8') if isinstance(elem, text_type) else elem
+        encoded[encoded_k] = encode_if_text(elem)
     return encoded
 
 class DPLACECsvRenderer(renderers.BaseRenderer):
@@ -102,3 +113,25 @@ class DPLACECsvRenderer(renderers.BaseRenderer):
             csv_writer.writerow(encode_rowdict(row))
 
         return csv_buffer.getvalue()
+        
+class ZipRenderer(renderers.BaseRenderer):
+
+    media_type = 'application/zip'
+    format = 'zip'
+    
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        '''
+        Renders zip file for phylogeny download
+        '''
+        import zipfile
+        if data is None:
+            return ''
+        s = StringIO()
+        zf = zipfile.ZipFile(s, "w")
+        if 'files' in data:  
+            for l in data['files']:      
+                zf.writestr(l['name']+'.svg', str(l['svg_string']))
+        if 'tree' in data:
+            zf.writestr('tree.svg', str(data['tree']))
+        zf.close()
+        return s.getvalue()

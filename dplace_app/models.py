@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
 from django.contrib.gis.db import models
+from collections import defaultdict
+
+UNIT_CHOICES = (
+    ('mm','mm'),
+    ('℃','℃'),
+    ('mo','mo'),
+    ('',''),
+)
+
+CLASS_LEVELS = (
+    (1, 'Family'),
+    (2, 'Subfamily'),
+    (3, 'Subsubfamily')
+)
+
+
+CLASSIFICATION_SCHEMES = (
+    ('E', 'Ethnologue17',),
+    ('R', 'Ethnologue17-Revised',),
+    #... any others as they become available. I can see a time in
+    # the not too distant future when we'll get better ones.
+)
+
 
 # Originally from 'iso lat long.xlsx'.  This spreadsheet contains ISO Codes and their
 # Locations.  Only iso codes from the 16th edition ethnologue were present.
@@ -9,19 +32,15 @@ from django.contrib.gis.db import models
 class ISOCode(models.Model):
     iso_code = models.CharField('ISO Code', db_index=True, max_length=3)
     location = models.PointField(null=True) # only have locations for ISO codes in 16th ed ethnologue
-    # For GeoDjango, must override the manager
-    objects = models.GeoManager()
+    
+    objects = models.GeoManager()   # For GeoDjango, must override the manager
+    
     def __unicode__(self):
         return "%s (%s)" % (self.iso_code, self.location)
+    
     class Meta:
         verbose_name = "ISO Code"
 
-SOCIETY_SOURCES = (
-    ('EA', 'EA'),
-    ('EA_Korotayev', 'EA_Korotayev'),
-    ('EA_Bodarenko', 'EA_Bodarenko'),
-    ('Binford', 'Binford'),
-)
 
 class Society(models.Model):
     ext_id = models.CharField('External ID', unique=True, max_length=10)
@@ -31,19 +50,35 @@ class Society(models.Model):
     iso_code = models.ForeignKey('ISOCode', null=True, related_name="societies")
     language = models.ForeignKey('Language', null=True, related_name="societies")
     objects = models.GeoManager()
+    focal_year = models.CharField('Focal Year', null=True, blank=True, max_length=100)
+    references = models.TextField('References', null=True)
+
+    def get_environmental_data(self):
+        """Returns environmental data for the given society"""
+        valueDict = defaultdict(list)
+        environmentals = self.environmentals.all()
+        for environmental in environmentals:
+            for value in environmental.values.order_by('variable__name').all():
+                valueDict[str(value.variable.category)].append({
+                    'name': value.variable.name,
+                    'value': value.value
+                })
+        return valueDict
 
     def get_cultural_trait_data(self):
         """Returns the Ethnographic Atlas data for the given society"""
-        values = []
+        valueDict = defaultdict(list)
         qset = self.variablecodedvalue_set.select_related('code').select_related('variable')
         for value in qset.order_by('variable__label').all():
-            values.append({
-                'label': value.variable.label,
-                'name': value.variable.name,
-                'code': value.coded_value,
-                'description': value.get_description(),
-            })
-        return values
+            categories = value.variable.index_categories.all()
+            for c in categories:
+                valueDict[str(c)].append({
+                    'label': value.variable.label,
+                    'name': value.variable.name,
+                    'code':value.coded_value,
+                    'description':value.get_description(),
+                })
+        return valueDict
 
     def __unicode__(self):
         return "%s - %s (%s)" % (self.ext_id, self.name, self.source)
@@ -51,20 +86,31 @@ class Society(models.Model):
     class Meta:
         verbose_name_plural = "Societies"
 
-UNIT_CHOICES = (
-    ('mm','mm'),
-    ('℃','℃'),
-    ('mo','mo'),
-    ('',''),
-)
+
+class EnvironmentalCategory(models.Model):
+    name = models.CharField(max_length=30, db_index=True, unique=True)
+    
+    def __unicode__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        ordering=("name",)
+
 
 class EnvironmentalVariable(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    category = models.ForeignKey('EnvironmentalCategory', null=True)
     units = models.CharField(max_length=10, choices=UNIT_CHOICES)
     codebook_info = models.CharField(max_length=500, default='None')
-
+    category = models.ForeignKey('EnvironmentalCategory', null=True)
+    
     def __unicode__(self):
-        return "%s (%s)" % (self.name, self.units)
+        if self.units:
+            return "%s (%s)" % (self.name, self.units)
+        return self.name
+        
     class Meta:
         ordering=("name",)
 
@@ -77,8 +123,10 @@ class EnvironmentalValue(models.Model):
     
     def society(self):
         return self.environmental.society
+    
     def __unicode__(self):
         return "%f" % self.value
+    
     class Meta:
         ordering=("variable",)
         unique_together = (
@@ -95,14 +143,15 @@ class Environmental(models.Model):
     actual_location = models.PointField()
     iso_code = models.ForeignKey('ISOCode', null=True, related_name="environmentals")
     source = models.ForeignKey('Source', null=True)
-
-    # For GeoDjango, must override the manager
-    objects = models.GeoManager()
+    
+    objects = models.GeoManager()   # For GeoDjango, must override the manager
 
     def __unicode__(self):
         return "%d Society: %d" % (self.id, self.society_id)
+    
     class Meta:
         verbose_name = "Environmental"
+
 
 class VariableDescription(models.Model):
     """
@@ -119,23 +168,30 @@ class VariableDescription(models.Model):
     index_categories = models.ManyToManyField('VariableCategory', related_name='index_variables')
     niche_categories = models.ManyToManyField('VariableCategory', related_name='niche_variables')
     codebook_info = models.CharField(max_length=500, default='None')
+    data_type = models.CharField(max_length=200, null=True)
     
     def coded_societies(self):
         return Society.objects.filter(variablecodedvalue__in=self.values.all())
+    
     def __unicode__(self):
         return "%s - %s" % (self.label, self.name)
+    
     class Meta:
         verbose_name = "Variable"
         ordering=("label",)
 
+
 class VariableCategory(models.Model):
     name = models.CharField(max_length=30, db_index=True, unique=True)
+    
     def __unicode__(self):
         return self.name
+    
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
         ordering=("name",)
+
 
 class VariableCodeDescription(models.Model):
     """
@@ -155,22 +211,27 @@ class VariableCodeDescription(models.Model):
     code_number = models.IntegerField(null=True, db_index=True)
     description = models.CharField(max_length=500, default='Unknown')
     n = models.IntegerField(null=True, default=0)
+    
     def save(self, *args, **kwargs):
         self.read_code_number()
         super(VariableCodeDescription, self).save(*args, **kwargs)
+    
     def read_code_number(self):
         try:
             self.code_number = int(self.code)
         except ValueError:
             pass
-
+            
     def coded_societies(self):
         return Society.objects.filter(variablecodedvalue__coded_value=self.code)
+    
     def __unicode__(self):
         return "%s - %s" % (self.code, self.description)
+    
     class Meta:
         verbose_name = "Code"
         ordering = ("variable", "code_number", "code")
+
 
 class VariableCodedValue(models.Model):
     """
@@ -188,7 +249,7 @@ class VariableCodedValue(models.Model):
 
     """
     variable = models.ForeignKey('VariableDescription', related_name="values")
-    society = models.ForeignKey('Society', limit_choices_to={'source__in': [x[0] for x in SOCIETY_SOURCES]}, null=True)
+    society = models.ForeignKey('Society', null=True)
     coded_value = models.CharField(max_length=100, db_index=True, null=False, default='.')
     code = models.ForeignKey('VariableCodeDescription', db_index=True, null=True)
     source = models.ForeignKey('Source', null=True)
@@ -198,8 +259,10 @@ class VariableCodedValue(models.Model):
             return self.code.description
         else:
             return u''
+    
     def __unicode__(self):
         return "%s" % self.coded_value
+    
     class Meta:
         verbose_name = "Value"
         ordering = ("variable", "coded_value")
@@ -214,6 +277,7 @@ class VariableCodedValue(models.Model):
             ('variable','society','coded_value'),
         )
 
+
 class Source(models.Model):
     """
     Source information for various items in the cultural traits data sets
@@ -223,18 +287,16 @@ class Source(models.Model):
     reference = models.CharField(max_length=500)
     focal_year = models.CharField(max_length=10,null=True)
     subcase = models.CharField(max_length=32,null=True)
+    
     def __unicode__(self):
         return "%s (%s)" % (self.author, self.year)
+    
     class Meta:
         unique_together = (
             ('year','author')
         )
 
-CLASS_LEVELS = (
-    (1, 'Family'),
-    (2, 'Subfamily'),
-    (3, 'Subsubfamily')
-)
+
 
 class LanguageClass(models.Model):
     # max length 37
@@ -242,6 +304,7 @@ class LanguageClass(models.Model):
     level = models.IntegerField(db_index=True, choices=CLASS_LEVELS)
     parent = models.ForeignKey('self', null=True, default=None)
     language_count = models.IntegerField(default=0,null=False)
+    
     def update_counts(self):
         if self.level == 1:
             self.language_count = self.languages1.count()
@@ -250,18 +313,15 @@ class LanguageClass(models.Model):
         elif self.level == 3:
             self.language_count = self.languages3.count()
         self.save()
+    
     def __unicode__(self):
         return "Language Class %s, level %d" % (self.name, self.level)
+    
     class Meta:
         verbose_name = "Language Class"
         ordering= ('level', 'name')
 
-CLASSIFICATION_SCHEMES = (
-    ('E', 'Ethnologue17',),
-    ('R', 'Ethnologue17-Revised',),
-    #... any others as they become available. I can see a time in
-    # the not too distant future when we'll get better ones.
-)
+
 
 class LanguageClassification(models.Model):
     scheme = models.CharField(max_length=1, choices=CLASSIFICATION_SCHEMES, default='E');
@@ -272,21 +332,27 @@ class LanguageClassification(models.Model):
     class_family = models.ForeignKey('LanguageClass', limit_choices_to={'level': 1}, related_name="languages1", null=True)
     class_subfamily = models.ForeignKey('LanguageClass', limit_choices_to={'level': 2}, related_name="languages2", null=True)
     class_subsubfamily = models.ForeignKey('LanguageClass', limit_choices_to={'level': 3}, related_name="languages3", null=True)
+    
     def __unicode__(self):
         return "Classification: %s for language %s" % (self.ethnologue_classification, self.language)
+    
     class Meta:
         index_together = [
             ['class_family', 'class_subfamily', 'class_subsubfamily']
         ]
         ordering=("language__name",)
 
+
 class Language(models.Model):
     name = models.CharField(max_length=50, db_index=True)
     iso_code = models.ForeignKey('ISOCode', related_name="languages", unique=True)
+    
     def __unicode__(self):
         return "Language: %s, ISO Code %s" % (self.name, self.iso_code.iso_code)
+        
     class Meta:
         verbose_name = "Language"
+
 
 class GeographicRegion(models.Model):
     level_2_re = models.FloatField()
@@ -296,8 +362,10 @@ class GeographicRegion(models.Model):
     tdwg_code = models.IntegerField()
     geom = models.MultiPolygonField(srid=4326)
     objects = models.GeoManager()
+    
     def __unicode__(self):
         return "Region: %s, Continent %s" % (self.region_nam, self.continent)
+
 
 class LanguageTree(models.Model):
     name = models.CharField(max_length=50, db_index=True)
@@ -305,3 +373,4 @@ class LanguageTree(models.Model):
     file = models.FileField(upload_to='language_trees',null=True)
     newick_string = models.TextField(default='')
     source = models.ForeignKey('Source', null=True)
+

@@ -11,6 +11,7 @@ router.register(r'categories', api_views.VariableCategoryViewSet)
 router.register(r'codes', api_views.VariableCodeDescriptionViewSet)
 router.register(r'values', api_views.VariableCodedValueViewSet)
 router.register(r'societies', api_views.SocietyViewSet)
+router.register(r'environmental_categories', api_views.EnvironmentalCategoryViewSet)
 router.register(r'environmental_variables', api_views.EnvironmentalVariableViewSet)
 router.register(r'environmentals', api_views.EnvironmentalViewSet)
 router.register(r'environmental_values', api_views.EnvironmentalValueViewSet)
@@ -20,6 +21,8 @@ router.register(r'language_classifications', api_views.LanguageClassificationVie
 router.register(r'languages', api_views.LanguageViewSet)
 router.register(r'language_trees', api_views.LanguageTreeViewSet)
 router.register(r'geographic_regions', api_views.GeographicRegionViewSet)
+router.register(r'sources', api_views.SourceViewSet)
+
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browseable API.
@@ -34,7 +37,9 @@ urlpatterns = patterns('dplace_app.views',
     url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/find_societies', api_views.find_societies, name='find_societies'),
     url(r'^api/v1/trees_from_languages', api_views.trees_from_languages, name='trees_from_languages'),
-    url(r'^api/v1/newick_tree/(?P<pk>\d+)/?$', api_views.newick_tree, name='newick_tree'),
-    url(r'^api/v1/get_trees', api_views.get_newick_trees, name="get_trees"),
+    url(r'^api/v1/min_and_max', api_views.get_min_and_max, name="min_and_max"),
+    url(r'^api/v1/bf_cont_variable', api_views.bin_bfcont_data, name="bf_cont_variable"),
     url(r'^api/v1/csv_download', api_views.csv_download, name='csv_download'),
+    url(r'^api/v1/zip', api_views.zip_legends, name='zip_legends'),
+
 )
