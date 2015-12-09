@@ -106,6 +106,12 @@ class LanguageTreeViewSet(viewsets.ReadOnlyModelViewSet):
     filter_fields = ('name',)
     queryset = LanguageTree.objects.all()
     
+class SourceViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = SourceSerializer
+    filter_fields = ('author', 'name')
+    queryset = Source.objects.all()
+        
+    
 #not sure if we need to keep this code since it isn't used at the moment
 #but could come in handy in the future
 def get_language_trees_from_query_dict(query_dict):
@@ -153,12 +159,6 @@ def trees_from_languages_array(language_ids):
             continue
         t.newick_string = newick.write(format=5)
     return trees
-
-class SourceViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = SourceSerializer
-    filter_fields = ('author',)
-    queryset = Source.objects.all()
-
 
 def result_set_from_query_dict(query_dict):
     result_set = SocietyResultSet()
@@ -239,8 +239,6 @@ def result_set_from_query_dict(query_dict):
             language_ids.append(s.society.language.id)
     trees = trees_from_languages_array(language_ids)
     for t in trees:
-        if 'language_classifications' in query_dict and 'global' in t.name:
-            continue
         result_set.add_language_tree(t)
     return result_set
 
@@ -277,6 +275,11 @@ def get_categories(request):
         return Response(VariableCategorySerializer(source_categories, many=True).data)
     else:
         return Response(VariableCategorySerializer(categories, many=True).data)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_dataset_sources(requesy):
+    return Response(SourceSerializer(Source.objects.all().exclude(name=""), many=True).data)
     
 class GeographicRegionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GeographicRegionSerializer
@@ -307,7 +310,7 @@ def get_min_and_max(request):
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
-def bin_bfcont_data(request):
+def bin_cont_data(request): #MAKE THIS GENERIC
     query_string = request.QUERY_PARAMS['query']
     query_dict = json.loads(query_string)
     if 'bf_id' in query_dict:
@@ -316,8 +319,7 @@ def bin_bfcont_data(request):
         min_value = None
         max_value = 0.0
         missing_data_option = False
-        bins = []
-
+        bins = []        
         for v in values:
             if re.search('[a-zA-Z]', v.coded_value):
                 if not missing_data_option:
@@ -329,6 +331,7 @@ def bin_bfcont_data(request):
                     missing_data_option = True
                 continue
             else:
+                v.coded_value = v.coded_value.replace(',', '')
                 if min_value is None:
                     min_value = float(v.coded_value)
                 elif float(v.coded_value) < min_value:

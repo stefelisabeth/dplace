@@ -19,9 +19,7 @@ CLASS_LEVELS = (
 CLASSIFICATION_SCHEMES = (
     ('E', 'Ethnologue17',),
     ('R', 'Ethnologue17-Revised',),
-    ('G', 'Glottolog',), #CHECK THIS
-    #... any others as they become available. I can see a time in
-    # the not too distant future when we'll get better ones.
+    ('G', 'Glottolog',), 
 )
 
 
@@ -30,6 +28,7 @@ CLASSIFICATION_SCHEMES = (
 # Other datasets references ISO Codes that were not present in 16th ed, so now
 # this is loaded from the ethnologue, and locations are annotated later if known
 
+# We don't really need a location field here...
 class ISOCode(models.Model):
     iso_code = models.CharField('ISO Code', db_index=True, max_length=3)
     location = models.PointField(null=True) # only have locations for ISO codes in 16th ed ethnologue
@@ -60,8 +59,8 @@ class Society(models.Model):
     language = models.ForeignKey('Language', null=True, related_name="societies")
     objects = models.GeoManager()
     focal_year = models.CharField('Focal Year', null=True, blank=True, max_length=100)
-    references = models.TextField('References', null=True)
-
+    alternate_names = models.TextField(default="")
+    
     def get_environmental_data(self):
         """Returns environmental data for the given society"""
         valueDict = defaultdict(list)
@@ -70,7 +69,8 @@ class Society(models.Model):
             for value in environmental.values.order_by('variable__name').all():
                 valueDict[str(value.variable.category)].append({
                     'name': value.variable.name,
-                    'value': value.value
+                    'value': format(value.value, '.4f'),
+                    'units': value.variable.units
                 })
         return valueDict
 
@@ -219,6 +219,7 @@ class VariableCodeDescription(models.Model):
     code = models.CharField(max_length=20, db_index=True, null=False, default='.')
     code_number = models.IntegerField(null=True, db_index=True)
     description = models.CharField(max_length=500, default='Unknown')
+    short_description = models.CharField(max_length=500, default="")
     n = models.IntegerField(null=True, default=0)
     
     def save(self, *args, **kwargs):
@@ -263,6 +264,9 @@ class VariableCodedValue(models.Model):
     code = models.ForeignKey('VariableCodeDescription', db_index=True, null=True)
     source = models.ForeignKey('Source', null=True)
     comment = models.TextField(default="")
+    references = models.ManyToManyField('Source', related_name='references')
+    subcase = models.TextField(default="")
+    focal_year = models.CharField(max_length=10, default="")
     
     def get_description(self):
         if self.code is not None:
@@ -287,20 +291,21 @@ class VariableCodedValue(models.Model):
             ('variable','society','coded_value'),
         )
 
-
 class Source(models.Model):
     """
-    Source information for various items in the cultural traits data sets
+    Stores references for VariableCodedValues, also for dataset sources.
+    Not really sure if we should separate dataset sources from references (I think we should),
+    but since all the code has already been written with this model, I won't change it yet.
     """
-    year = models.CharField(max_length=10) # text, because might be '1996', '1999-2001', or 'ND'
+    
+    year = models.CharField(max_length=30) # text, because might be '1996', '1999-2001', or 'ND'
     author = models.CharField(max_length=50)
     reference = models.CharField(max_length=500)
-    focal_year = models.CharField(max_length=10,null=True)
-    subcase = models.CharField(max_length=32,null=True)
+    name = models.CharField(max_length=100, default="")
     
     def __unicode__(self):
         return "%s (%s)" % (self.author, self.year)
-    
+
     class Meta:
         unique_together = (
             ('year','author')
@@ -308,6 +313,7 @@ class Source(models.Model):
 
 class LanguageClass(models.Model):
     # max length 37
+    scheme = models.CharField(max_length=1, choices=CLASSIFICATION_SCHEMES, default='G')
     name = models.CharField(max_length=50, db_index=True)
     level = models.IntegerField(db_index=True, choices=CLASS_LEVELS)
     parent = models.ForeignKey('self', null=True, default=None)
@@ -329,24 +335,20 @@ class LanguageClass(models.Model):
         verbose_name = "Language Class"
         ordering= ('level', 'name')
 
-
-
 class LanguageClassification(models.Model):
-    scheme = models.CharField(max_length=1, choices=CLASSIFICATION_SCHEMES, default='E');
+    scheme = models.CharField(max_length=1, choices=CLASSIFICATION_SCHEMES, default='G');
     language = models.ForeignKey('Language', null=True)
-    # From 'Ethnologue Classification (unrevised)' column
-    ethnologue_classification = models.CharField(max_length=250, db_index=True, unique=True)
-    # From 'FAMILY-REVISED', 'Class2', 'Class3'
     class_family = models.ForeignKey('LanguageClass', limit_choices_to={'level': 1}, related_name="languages1", null=True)
     class_subfamily = models.ForeignKey('LanguageClass', limit_choices_to={'level': 2}, related_name="languages2", null=True)
     class_subsubfamily = models.ForeignKey('LanguageClass', limit_choices_to={'level': 3}, related_name="languages3", null=True)
     
     def __unicode__(self):
-        return "Classification: %s for language %s" % (self.ethnologue_classification, self.language)
+        return "Family: %s for language %s" % (self.class_family, self.language)
     
     class Meta:
         index_together = [
-            ['class_family', 'class_subfamily', 'class_subsubfamily']
+            ['class_family', 'class_subfamily', 'class_subsubfamily'],
+            ['scheme', 'class_family']
         ]
         ordering=("language__name",)
 
@@ -359,7 +361,7 @@ class Language(models.Model):
     glotto_code = models.ForeignKey('GlottoCode', null=True, blank=True, unique=True)
     
     def __unicode__(self):
-        return "Language: %s, ISO Code %s, Glotto Code %s" % (self.name, self.iso_code.iso_code, self.glotto_code.glotto_code)
+        return "Language: %s, ISO Code %s, Glotto Code %s" % (self.name, self.iso_code, self.glotto_code)
         
     class Meta:
         verbose_name = "Language"

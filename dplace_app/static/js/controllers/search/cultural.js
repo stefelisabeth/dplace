@@ -1,8 +1,9 @@
-function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, BfContinuousVariable, Source, getCategories) {
+function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, ContinuousVariable, DatasetSources, getCategories) {
    var linkModel = function() {
         // Model/state lives in searchModelService
         $scope.traits = [searchModelService.getModel().getCulturalTraits()];
     };
+    
     
     $scope.$on('searchModelReset', linkModel); // When model is reset, update our model
     linkModel();
@@ -15,16 +16,16 @@ function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, BfC
     // triggered by the view when a category is changed
     $scope.categoryChanged = function(trait) {
         trait.indexVariables = Variable.query({index_categories: trait.selectedCategory.id, source: trait.selectedSource.id});
-        trait.nicheVariables = Variable.query({niche_categories: trait.selectedCategory.id, source: trait.selectedSource.id});
 		trait.codes = [];
         trait.selectedCode = "";
     };
 
     // triggered by the view when a trait is changed in the picker
     $scope.traitChanged = function(trait) {
+        console.log(trait.selectedVariable);
         trait.selectedCode = "";
-        if (trait.selectedVariable.data_type == 'CONTINUOUS') {
-            trait.codes = BfContinuousVariable.query({query: {bf_id: trait.selectedVariable.id}});
+        if (trait.selectedVariable.data_type == 'Continuous') {
+            trait.codes = ContinuousVariable.query({query: {bf_id: trait.selectedVariable.id}});
         } else
             trait.codes = CodeDescription.query({variable: trait.selectedVariable.id });
     };
@@ -42,8 +43,6 @@ function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, BfC
     };
 
     $scope.traitCodeSelectionChanged = function(trait) {
-        //trait.badgeValue = trait.codes.filter(function(code) { return code.isSelected; }).length;
-
 		currentSelection = $scope.getSelectedTraitCodes();
 		currentSelection.forEach(function(code) {
 			if (trait.selected.indexOf(code) == -1) {
@@ -69,15 +68,6 @@ function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, BfC
 
     // wired to the search button. Gets the code ids, adds cultural to the query, and invokes the search
     $scope.doSearch = function() {
-        var codes = [];
-        traits = $scope.traits;
-        traits.forEach(function(trait) {
-            //the selected array contains all the codes that have been selected (even if they were then unselected)
-            //we need to filter it to only search for the codes that are currently selected
-            var selected = trait.selected.filter(function(code){ return code.isSelected; });
-            codes = codes.concat(selected);
-        });
-        $scope.updateSearchQuery({ variable_codes: codes });
-        $scope.searchSocieties();
+        $scope.search();
     };
 }
