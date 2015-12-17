@@ -118,6 +118,23 @@ body {
     border:0px;
 }
 
+.tooltip-inner {
+    white-space:pre-wrap;
+}
+
+.comment-tooltip, .source-link {
+    cursor:pointer;
+}
+
+.source-link, .val-sources {
+    font-size: 12.5px;
+}
+
+.val-sources {
+    padding-top: 5px;
+    padding-left: 10px;
+}
+
 .row-margin-top {
     margin-top: 5px;
 }
@@ -204,6 +221,12 @@ label.light {
     cursor: hand;
 }
 
+.map-legend {
+    position: absolute;
+    margin-top: -290px;
+    margin-left: 800px;
+}
+
 .circle {
     border-radius: 50%;
     border: 1px solid darkgray;
@@ -217,3 +240,32 @@ label.light {
     top: 160px;
 }
 
+.teamTABLE {
+    width:100%;
+}
+
+.teamTR {
+    
+}
+
+.teamImgTD {
+    padding-right:10px;
+    padding-bottom:10px;
+}
+
+.teamLinkTD {
+    
+}
+
+.leftParaTab {
+    float: left;
+    position: relative;
+    margin-left:10px;
+    margin-right:10px;
+}
+.rightParaTab {
+    float: right;
+    position: relative;
+    margin-left:10px;
+    margin-right:10px;
+}
