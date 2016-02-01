@@ -1,5 +1,5 @@
 angular.module('languagePhylogenyDirective', [])
-    .directive('languagePhylogeny', function() {
+    .directive('languagePhylogeny', function(colorMapService) {
         function link(scope, element, attrs) {
             var rightAngleDiagonal = function() {
                 var projection = function(d) { return [d.y, d.x]; }
@@ -95,22 +95,31 @@ angular.module('languagePhylogenyDirective', [])
                             for (var i = 0; i < society.languages.length; i++) {
                                 var classification = scope.query.language_classifications.filter(function(l) { return l.id == society.languages[i].id });
                                 selected.append("svg:circle")
-                                    .attr("r", function() {
-                                        if (global) return 1.5;
-                                        else return 4.5;
-                                    })
+                                    .attr("r", 1.5)
                                     .attr("stroke", "#000")
                                     .attr("stroke-width", "0.5")
                                     .attr("fill", function(n) {
                                         if (classification.length > 0) {
                                             value = classification[0].family.id;
-                                            hue = value * 240 / scope.results.classifications.length;
-                                            return 'hsl('+hue+',100%, 50%)';
+                                            rgb = colorMapService.mapColor(value, results.classifications.length);
+                                            return rgb;
                                         }
                                     });
                                 
                             }
                         
+                        } else if (scope.query.geographic_regions) {
+                            for (var i = 0; i < society.geographic_regions.length; i++) {
+                                selected.append("svg:circle")
+                                    .attr("r", 1.5)
+                                    .attr("stroke", "#000")
+                                    .attr("stroke-width", "0.5")
+                                    .attr("fill", function(n) {
+                                        value = society.geographic_regions[i].tdwg_code;
+                                        rgb = colorMapService.mapColor(value, results.geographic_regions.length);
+                                        return rgb;
+                                    });
+                            }
                         }
                     
                     }
@@ -129,17 +138,9 @@ angular.module('languagePhylogenyDirective', [])
                                     .attr("fill", function(n) {
                                         value = society.environmental_values[0].value; //only 1 environmental value at a time so we can do this
                                         min = scope.results.environmental_variables[0].min;
-                                        max = scope.results.environmental_variables[0].max;
-                                        if (scope.results.environmental_variables[0].name == 'Net Primary Production' || scope.results.environmental_variables[0].name == ' Mean Growing Season NPP') {
-                                            hue = 30 + (((value - min) / (max - min))*88)
-                                        }  else if (scope.results.environmental_variables[0].name == 'Annual Mean Precipitation') {
-                                            lum = 100 - (((value - min) / (max - min))*95);
-                                            return 'hsl(252,65%,'+lum+'%)';
-                                        }
-                                        else {
-                                            hue = 240 - (((value-min)/(max-min))*240);
-                                        }
-                                        return 'hsl('+hue+',100%, 50%)';
+                                        max = scope.results.environmental_variables[0].max;                                        
+                                        rgb = colorMapService.tempColor(value, min, max, scope.results.environmental_variables[0].name);
+                                        return rgb;
                                     })
                                     .on("mouseover", function() { 
                                                      d3.select("body").append("div")
@@ -170,19 +171,17 @@ angular.module('languagePhylogenyDirective', [])
                                         .attr("transform", "translate("+translate+", 0)")
                                         .attr("fill", function(n) {
                                             if (society.variable_coded_values[i].code_description && society.variable_coded_values[i].code_description.description.indexOf("Missing data") != -1) {
-                                                   return 'hsl(360, 100%, 100%)';
+                                                   return 'rgb(255, 255, 255)';
                                                 }
-                                                value = society.variable_coded_values[i].coded_value;
-                                                
-                                                
+                                                value = society.variable_coded_values[i].coded_value;     
                                                 if (variable.variable.data_type.toUpperCase() == 'CONTINUOUS') {
                                                     var min = variable.variable.min;
                                                     var max = variable.variable.max;
-                                                    var lum = 100 - ((value-min)/(max-min) * 78);
-                                                    return 'hsl(0, 65%,'+lum+'%)';
-                                                }                                               
-                                                hue = value * 240 / variable.codes.length;
-                                                return 'hsl('+hue+',100%, 50%)';
+                                                    rgb = colorMapService.mapColorMonochrome(min, max, value, 0);
+                                                    return rgb;
+                                                }
+                                                rgb = colorMapService.colorMap[parseInt(value)];
+                                                return  rgb;
                                         })
                                         .on("mouseover", function() { 
                                                  d3.select("body").append("div")
@@ -383,14 +382,13 @@ angular.module('languagePhylogenyDirective', [])
                 translate = 0;
                 //changes markers for global tree
                 if (langTree.name.indexOf("global") != -1) {
-                    if (scope.query.language_classifications && !scope.query.environmental_filters && !scope.query.variable_codes) {
+                    if ((scope.query.language_classifications || scope.query.geographic_regions) && !scope.query.environmental_filters && !scope.query.variable_codes) {
                             addMarkers(langTree, scope.results, null, node, true, translate);
-
                     }
                 
                 
                     scope.$watch('results.chosenTVariable', function(oldValue, newvalue) {
-                        if (scope.results.chosenTVariable.id) {
+                        if (scope.results.chosenTVariable) {
                             chosen_var_id = scope.results.variable_descriptions.filter(function(variable) { return variable.variable.id == scope.results.chosenTVariable.id });
                             if (chosen_var_id.length > 0)
                                 addMarkers(langTree, scope.results, chosen_var_id[0], node, true, translate);
@@ -479,10 +477,11 @@ angular.module('languagePhylogenyDirective', [])
                 
                 if (langTree.name.indexOf("global") == -1) addLogo(h/2);
                 
-                
+               
                 phyloWidth = d3.select("language-phylogeny").select("g").node().getBBox().width;
                 d3.select("#legend")
                     .attr("style", "width:"+($(window).width()-phyloWidth-100)+"px; position:absolute; right:20px; z-index:1;");
+                    
             };
 
             scope.$on('treeSelected', function(event, args) {
@@ -630,7 +629,7 @@ angular.module('dplaceMapDirective', [])
                     scope.results.societies.forEach(function(societyResult) {
                         var society = societyResult.society;
                         // Add a marker for each point
-                        var marker = {latLng: [society.location.coordinates[1], society.location.coordinates[0]], name: society.name}
+                        var marker = {latLng: [society.location[1], society.location[0]], name: society.name}
                         scope.map.addMarker(society.id, marker); 
                          if (!scope.chosen) {   
                             results = scope.results;
