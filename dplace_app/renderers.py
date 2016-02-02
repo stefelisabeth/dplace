@@ -13,7 +13,8 @@ class DPLACECSVResults(object):
             'Longitude',
             'Latitude',
             'ISO code',
-            'Language name']
+            'Language name',
+            'Language family']
         self.rows = []
         self.parse()
         self.encode_field_names()
@@ -65,14 +66,18 @@ class DPLACECSVResults(object):
             row['Society name'] = society['name']
             row['Society source'] = society['source']['name']
             row['Longitude'] = "" if society['location'] is None \
-                else society['location'][0]
+                else society['location']['coordinates'][0]
             row['Latitude'] = "" if society['location'] is None \
-                else society['location'][1]
+                else society['location']['coordinates'][1]
             if society['language'] is not None and 'name' in society['language']:
                 row['ISO code'] = society['language']['iso_code']
                 row['Language name'] = society['language']['name']
+                if 'family' in society['language'] and 'name' in society['language']['family']:
+                    row['Language family'] = society['language']['family']['name']
             else:
                 row['Language name'] = ""
+                row['Language family'] = ""
+                
             # geographic - only one
             geographic_regions = item['geographic_regions']
             if len(geographic_regions) == 1:
