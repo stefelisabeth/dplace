@@ -127,6 +127,7 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties, 
                 $scope.searchModel.results.variable_descriptions[i].variable['min'] = min;
                 $scope.searchModel.results.variable_descriptions[i].variable['max'] = max;
                 $scope.searchModel.results.variable_descriptions[i].variable['units'] = $scope.searchModel.results.variable_descriptions[i].variable.name.substring($scope.searchModel.results.variable_descriptions[i].variable.name.indexOf('(')+1, $scope.searchModel.results.variable_descriptions[i].variable.name.indexOf(')'));
+                $scope.searchModel.results.variable_descriptions[i].codes = codes;
             }                    
             
         }
@@ -186,6 +187,7 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties, 
 
         // This method merges the current searchQuery object with the incoming searchQuery
     $scope.updateSearchQuery = function(searchQuery) {
+        $scope.searchModel.query = {};
         for(var propertyName in searchQuery) {
             $scope.searchModel.query[propertyName] = searchQuery[propertyName];
         }
@@ -218,8 +220,6 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties, 
                         if (region.tdwg_code == selectedRegion.code)
                             selectedRegion.id = region.id;
                     });
-                
-                
                 });
                 if (selectedRegions.length > 0)
                     searchQuery['geographic_regions'] = selectedRegions;
@@ -227,18 +227,20 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties, 
             //get selected environmental variable and search parameters
             if (propertyName == 'environmentalData') {
                 searchParams[propertyName].selectedVariables.forEach(function(variable) {
-                    selected_id = variable.selectedVariable.id;
-                    selected_operator = variable.selectedFilter.operator;
-                    selected_params = variable.vals;
-                    filters = {
-                        id: selected_id,
-                        operator: selected_operator,
-                        params: selected_params
-                    }
-                    if ('environmental_filters' in searchQuery) {
-                        searchQuery['environmental_filters'].push(filters);
-                    } else {
-                        searchQuery['environmental_filters'] = [filters];
+                    if (variable.selectedVariable) {
+                        selected_id = variable.selectedVariable.id;
+                        selected_operator = variable.selectedFilter.operator;
+                        selected_params = variable.vals;
+                        filters = {
+                            id: selected_id,
+                            operator: selected_operator,
+                            params: selected_params
+                        }
+                        if ('environmental_filters' in searchQuery) {
+                            searchQuery['environmental_filters'].push(filters);
+                        } else {
+                            searchQuery['environmental_filters'] = [filters];
+                        }
                     }
                 });
             }
