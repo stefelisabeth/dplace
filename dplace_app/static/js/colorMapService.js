@@ -70,7 +70,7 @@ function ColorMapService() {
     this.tempColor = function(index, min, max, name) {
     if (name == "Net Primary Production" || name == "Mean Growing Season NPP") {
         hue = 30 + (((index - min) / (max - min)) * 88);
-    } else if (name == "Annual Mean Precipitation"){
+    } else if (name == "Monthly Mean Precipitation"){
         color = this.mapColorMonochrome(min, max, index, 252);
         return color;
     }
@@ -142,7 +142,7 @@ function ColorMapService() {
                     var color = this.mapColorMonochrome(variable_description[0].variable.min, variable_description[0].variable.max, society.variable_coded_values[j].coded_value, 0);
                     colors[society.society.id] = color;
                 } else {
-                    if (society.variable_coded_values[j].code == 'NA') {
+                    if (society.variable_coded_values[j].coded_value == 'NA') {
                         colors[society.society.id] = 'rgb(255,255,255)';
                     } else {
                         if (variable_description[0].variable.label == "EA094") { //this variable's codes range from 11-99, for some reason

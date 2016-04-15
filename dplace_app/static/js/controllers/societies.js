@@ -2,12 +2,20 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
     $scope.results = searchModelService.getModel().getResults();
     $scope.query = searchModelService.getModel().getQuery();
     $scope.variables = [];
-    $scope.buttons = [
-        {value:'phylogeny', name:'Phylogenies', description: "Trees derived from discrete data using phylogenetic methods (branch lengths informative)"},
-        {value:'glottolog', name:'Glottolog Trees', description: "Trees derived from Glottolog language family taxonomies (branch lengths uninformative)"},
-        {value:'global', name:'Global Tree', description: "A global language supertree composed from language family taxonomies in Glottolog (branch lengths uninformative)"},
-    ];
-    
+
+    $scope.buttons = [];
+    if ($scope.results && $scope.results.language_trees) {
+        if ($scope.results.language_trees.phylogenies.length > 0) {
+            $scope.buttons.push({value:'phylogeny', name:'Phylogenies', description: "Trees derived from discrete data using phylogenetic methods (branch lengths informative)"});
+        }
+        if ($scope.results.language_trees.glotto_trees.length > 0) {
+            $scope.buttons.push({value:'glottolog', name:'Glottolog Trees', description: "Trees derived from Glottolog language family taxonomies (branch lengths uninformative)"});
+        }
+        if ($scope.results.language_trees.global_tree) {
+            $scope.buttons.push({value:'global', name:'Global Tree', description: "A global language supertree composed from language family taxonomies in Glottolog (branch lengths uninformative)"});
+        }
+    }
+
     $scope.tabs = [
         { title: "Table", content: "table", active: true},
         { title: "Map", content: "map", active: false},
@@ -25,9 +33,15 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
             variable['svgSize'] = variable.codes.length * 27;
         });
     }
+    
         
-    if ($scope.query.environmental_filters) {
+    if ($scope.query.e) {
         $scope.variables = $scope.variables.concat($scope.results.environmental_variables);
+        $scope.results.environmental_variables.forEach(function(variable) {
+         if (variable.name == "Monthly Mean Precipitation") variable.fill = "url(societies#blue)";
+            else if (variable.name == "Net Primary Production" || variable.name == "Mean Growing Season NPP") variable.fill = "url(societies#earthy)";
+            else variable.fill = "url(societies#temp)";
+        });
     }
     
     $scope.setActive('societies');
@@ -151,7 +165,8 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
 
             }
             var map_svg = map_svg.substring(0, map_svg.indexOf("</svg>"));
-            map_svg = map_svg.concat(legend_svg);
+            // concat legend and remove all relative d-place links from svg's defs urls
+            map_svg = map_svg.concat(legend_svg.replace(/url\(.*?#/, 'url(#'));
             map_svg = map_svg.concat(gradients_svg +"</svg>");
             var filename = $scope.results.chosenVariable.name.replace(/[\W]+/g, "-").toLowerCase()+"-map.svg";
         }
@@ -226,6 +241,7 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
     $scope.buttonChanged = function(buttonVal) {
         d3.select('language-phylogeny').html('');
         $scope.globalTree = false;
+        $scope.results.selectedTree = null;
         if (buttonVal.indexOf("global") != -1) {
             $scope.globalTree = true;
             $scope.results.selectedTree = $scope.results.language_trees.global_tree;
@@ -242,7 +258,6 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
         $scope.$broadcast('treeSelected', {tree: $scope.results.selectedTree});
         if ($scope.results.selectedTree.name.indexOf("global") == -1) {
             $scope.globalTree = false;
-            //$scope.treeDownload();
         } else {
             $scope.globalTree = true;
         }
@@ -250,25 +265,13 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
         //for environmental legend
         if ($scope.results.environmental_variables.length > 0) {
             if ($scope.results.environmental_variables[0].name == 'Net Primary Production' || $scope.results.environmental_variables[0].name == 'Mean Growing Season NPP') 
-                d3.selectAll(".envVar").attr("fill", "url(#earthy)");
+                d3.selectAll(".envVar").attr("fill", "url(societies#earthy)");
             else if ($scope.results.environmental_variables[0].name == "Annual Mean Precipitation")
-                d3.selectAll(".envVar").attr("fill", "url(#blue)");
+                d3.selectAll(".envVar").attr("fill", "url(societies#blue)");
             else 
-                d3.selectAll(".envVar").attr("fill", "url(#temp)");
+                d3.selectAll(".envVar").attr("fill", "url(societies#temp)");
         }
         
-    };
-    
-    $scope.showOrHide = function(chosenVarId, id) {
-        if (!$scope.globalTree) return false;
-        
-        if (chosenVarId == id) return false;
-        else return true;
-    };
-    
-    $scope.legendArrow = function(code) {
-        if (code.hidden) code.hidden = false;
-        else code.hidden = true;
     };
     
     $scope.clicked = function(trees) {
@@ -307,7 +310,8 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
             .attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
             .node().parentNode.innerHTML;
-        tree_svg = tree_svg.substring(tree_svg.indexOf("</svg>")+6);
+            
+        //need to do this to remove the time scale
         tree_svg = tree_svg.substring(0, tree_svg.indexOf("</svg>"));
         tree_svg = tree_svg.concat("</svg>");
         var all_legends = {};
@@ -332,20 +336,12 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
         }
         
         for (var i = 0; i < $scope.results.environmental_variables.length; i++) {
-            env_svg = d3.select("#e"+$scope.results.environmental_variables[i].id).node().innerHTML;
+            env_svg = d3.select("#e"+$scope.results.environmental_variables[i].id).select("div").node().innerHTML;
             env_svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">'+env_svg.substring(0, env_svg.indexOf("</svg>")) + '</svg>' + gradients_svg + '</svg>';
             name = $scope.results.environmental_variables[i].CID + '-'+$scope.results.environmental_variables[i].name;
             legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': env_svg});
         }
-        
-        
-        /*if ($scope.results.environmental_variables.length > 0) {
-            var env_svg = d3.select("#E1").node().innerHTML;
-            env_svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">'+env_svg.substring(0, env_svg.indexOf("</svg>")) + '</svg>' + gradients_svg + '</svg>';
-            name = "E1-"+$scope.results.environmental_variables[0].name;
-            legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': env_svg});
-        }*/
-            
+
         query = {"legends": legends_list, "tree": tree_svg, "name": $scope.results.selectedTree.name+'.svg'};
         var date = new Date();
         var filename = "dplace-tree-"+date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+".zip"
@@ -354,29 +350,6 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
             saveAs(file, filename);
         });
     };
-    
-    $scope.showComments = function(society, variable_id) {
-        for (var i = 0; i < society.variable_coded_values.length; i++) {
-            if (society.variable_coded_values[i].variable == variable_id) {
-                if ((society.variable_coded_values[i].focal_year.length > 0 && society.variable_coded_values[i].focal_year != 'NA') || society.variable_coded_values[i].comment.length > 0)
-                    return true
-                else    
-                    return false
-            }
-        }
-    };
-    
-    $scope.showSource = function(society, variable_id) {
-        for (var i = 0; i < society.variable_coded_values.length; i++) {
-            if (society.variable_coded_values[i].variable == variable_id) {
-                if (society.variable_coded_values[i].references.length > 0)
-                    return true;
-                else return false;
-            }
-        }
-        return false;
-    };
-
     
     //NEW CSV DOWNLOAD CODE
     //Sends a POST (rather than GET) request to the server, then constructs a Blob and uses FileSaver.js to trigger the save as dialog
@@ -398,16 +371,4 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
             saveAs(file, filename);
         }
     };
-    
-    //OLD CSV DOWNLOAD CODE
-    //Keeping just in case we need it in the future, will delete if we do not.
-    /*$scope.generateDownloadLinks = function() {
-        // queryObject is the in-memory JS object representing the chosen search options
-        var queryObject = searchModelService.getModel().getQuery();
-        console.log(queryObject);
-        // the CSV download endpoint is a GET URL, so we must send the query object as a string.
-        var queryString = encodeURIComponent(JSON.stringify(queryObject));
-        // format (csv/svg/etc) should be an argument, and change the endpoint to /api/v1/download
-        $scope.csvDownloadLink = "/api/v1/csv_download?query=" + queryString;
-    };    */
 }
