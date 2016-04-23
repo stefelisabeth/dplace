@@ -30,7 +30,7 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
     if ($scope.results.variable_descriptions) {
         $scope.results.variable_descriptions.forEach(function(variable) {
             $scope.variables.push(variable.variable);
-            variable['svgSize'] = variable.codes.length * 27;
+            variable['svgHeight'] = variable.codes.length * 27;
         });
     }
     
@@ -357,7 +357,7 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
     var file;
     $scope.download = function() {
         var date = new Date();
-        var filename = "dplace-societies-"+date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+".csv"
+        var filename = "dplace-societies-"+date.toJSON().replace(/T.*$/,'')+".csv"
         if (!file) {
            $scope.disableCSVButton();
             var queryObject = searchModelService.getModel().getQuery(); 
