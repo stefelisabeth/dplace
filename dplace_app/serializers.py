@@ -31,7 +31,8 @@ class CulturalVariableSerializer(serializers.ModelSerializer):
             'codebook_info',
             'data_type',
             'source',
-            'index_categories'
+            'index_categories',
+            'units'
         )
 
 
@@ -100,11 +101,6 @@ class EnvironmentalVariableSerializer(serializers.ModelSerializer):
 class EnvironmentalValueSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.EnvironmentalValue
-
-
-class EnvironmentalSerializer(serializers.ModelSerializer):
-    class Meta(object):
-        model = models.Environmental
 
 
 class LanguageFamilySerializer(serializers.ModelSerializer):

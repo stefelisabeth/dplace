@@ -2,8 +2,10 @@
 from __future__ import unicode_literals
 import logging
 
-from dplace_app.models import ISOCode, Society, Language, LanguageFamily
-from dplace_app.models import Environmental, EnvironmentalCategory
+from django.conf import settings
+
+from dplace_app.models import ISOCode, Society, LanguageFamily
+from dplace_app.models import EnvironmentalCategory
 from dplace_app.models import EnvironmentalVariable, EnvironmentalValue
 from sources import get_source
 
@@ -55,11 +57,11 @@ def load_env_var(var_dict, categories):
 
 def load_environmental(items):
     variables = {v.var_id: v for v in EnvironmentalVariable.objects.all()}
-    societies = {(s.ext_id, s.source_id): s for s in Society.objects.all()}
+    societies = {s.ext_id: s for s in Society.objects.all()}
     res = 0
     objs = []
     for item in items:
-        if item['Dataset'] in ['EA', 'Binford']:
+        if item['Dataset'] in settings.DATASETS:
             if _load_environmental(item, variables, societies, objs):
                 res += 1
     EnvironmentalValue.objects.bulk_create(objs, batch_size=1000)
@@ -72,49 +74,27 @@ _missing_variables = set()
 
 
 def _load_environmental(val_row, variables, societies, objs):
+    if val_row['Code'] == 'NA':
+        return
     global _missing_variables
-    ext_id = val_row['soc_id']
-    source = get_source(val_row['Dataset'])
 
-    # hack for B109 vs. 109
-    if source.author == 'Binford' and ext_id.find('B') == -1:
-        ext_id = 'B' + ext_id
-
-    society = societies.get((ext_id, source.id))
+    society = societies.get(val_row['soc_id'])
     if society is None:
         logging.warn(
-            "Unable to find a Society object with ext_id %s and source %s, skipping..." %
-            (ext_id, source))
+            "Unable to find a Society with ext_id %s, skipping ..." % val_row['soc_id'])
         return
-    
-    # This limits the environmental data to one record per society record
-    found_environmentals = Environmental.objects.filter(society=society).all()
-    if len(found_environmentals) == 0:
-        if society.language is not None:
-            iso_code = society.language.iso_code
-        else:
-            iso_code = None
-        # Create the base Environmental
-        environmental, created = Environmental.objects.get_or_create(
-            society=society,
-            source=source,
-            iso_code=iso_code
-        )
-    else:
-        environmental = found_environmentals[0]
-        
-    variable = variables.get(val_row['variable'])
+
+    variable = variables.get(val_row['VarID'])
     if variable is None:
-        if val_row['variable'] not in _missing_variables:
-            logging.warn("Could not find environmental variable %s" % val_row['variable'])
-            _missing_variables.add(val_row['variable'])
+        if val_row['VarID'] not in _missing_variables:
+            logging.warn("Could not find environmental variable %s" % val_row['VarID'])
+            _missing_variables.add(val_row['VarID'])
         return
 
     objs.append(EnvironmentalValue(
         variable=variable,
-        value=float(val_row['value']),
-        comment=val_row['comment'],
-        environmental=environmental,
-        source=source
-    ))
+        value=float(val_row['Code']),
+        comment=val_row['Comment'],
+        society=society,
+        source=get_source(val_row['Dataset'])))
     return True
