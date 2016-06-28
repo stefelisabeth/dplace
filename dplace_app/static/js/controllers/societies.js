@@ -47,17 +47,7 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
     $scope.setActive('societies');
     
     $scope.columnSort = { sortColumn: 'society.name', reverse: false };
-        
-    $scope.disableCSVButton = function () {
-        $scope.csvDownloadButton.disabled = true;
-        $scope.csvDownloadButton.text = 'Downloading...';
-    };
 
-    $scope.enableCSVButton = function () {
-        $scope.csvDownloadButton.disabled = false;
-        $scope.csvDownloadButton.text = 'CSV';
-    };
-    
     var num_lines = 0;              
     $scope.wrapText = function(text, string) {
         text.each(function() {
@@ -305,18 +295,24 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
         $scope.tabs[2].active = true;
     }
     
+    $scope.nexusDownload = function() {
+        console.log($scope.results.selectedTree);
+        var filename = $scope.results.selectedTree.name+"-d-place.NEXUS";
+        string = "#NEXUS\nBEGIN TREES;\nTREE " + $scope.results.selectedTree.name+" = " + $scope.results.selectedTree.newick_string+"\nEND;"
+        file = new Blob([string], {type: 'text/nexus'});
+        saveAs(file, filename);
+    }
+    
     $scope.treeDownload = function() {
         var tree_svg = d3.select(".phylogeny")
             .attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
             .node().parentNode.innerHTML;
-            
-        //need to do this to remove the time scale
-        tree_svg = tree_svg.substring(0, tree_svg.indexOf("</svg>"));
-        tree_svg = tree_svg.concat("</svg>");
         var all_legends = {};
         legends_list = [];
         var gradients_svg = d3.select("#gradients-div").node().innerHTML;
+        
+        
         
         d3.selectAll(".legends").each( function(){
             leg = d3.select(this);
@@ -331,18 +327,27 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
             legend_id = all_legends[id];
             name = $scope.results.variable_descriptions[i].CID + '-'+ $scope.results.variable_descriptions[i].variable.name;
             svg_string = legend_id.node().innerHTML;
+            while (svg_string.indexOf("url(societies") != -1) { //strip out the societies part of the URL because this won't work in our download
+                index = svg_string.indexOf("url(societies");
+                svg_string = svg_string.substring(0, index+4) + svg_string.substring(index+13)
+            }
             svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">' + svg_string + gradients_svg + '</svg>';
             legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': svg_string});    
         }
         
         for (var i = 0; i < $scope.results.environmental_variables.length; i++) {
             env_svg = d3.select("#e"+$scope.results.environmental_variables[i].id).select("div").node().innerHTML;
+            while (env_svg.indexOf("url(societies") != -1) {
+                index = env_svg.indexOf("url(societies");
+                env_svg = env_svg.substring(0, index+4) + env_svg.substring(index+13)
+            }
             env_svg = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">'+env_svg.substring(0, env_svg.indexOf("</svg>")) + '</svg>' + gradients_svg + '</svg>';
             name = $scope.results.environmental_variables[i].CID + '-'+$scope.results.environmental_variables[i].name;
             legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': env_svg});
         }
 
-        query = {"legends": legends_list, "tree": tree_svg, "name": $scope.results.selectedTree.name+'.svg'};
+        query = {'l': legends_list, 't': [tree_svg], 'n': [$scope.results.selectedTree.name+'.svg']};
+        console.log(query);
         var date = new Date();
         var filename = "dplace-tree-"+date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+".zip"
         $http.post('/api/v1/zip_legends', query, {'responseType': 'arraybuffer'}).then(function(data) {
@@ -351,24 +356,37 @@ function SocietiesCtrl($scope, $timeout, $http, searchModelService, colorMapServ
         });
     };
     
-    //NEW CSV DOWNLOAD CODE
-    //Sends a POST (rather than GET) request to the server, then constructs a Blob and uses FileSaver.js to trigger the save as dialog
-    //Better because we can send more data to the server using POST request than GET request
+    $scope.disableCSVButton = function () {
+        $scope.csvDownloadButton.disabled = true;
+        $scope.csvDownloadButton.text = 'Downloading...';
+    };
+
+    $scope.enableCSVButton = function () {
+        $scope.csvDownloadButton.disabled = false;
+        $scope.csvDownloadButton.text = 'CSV';
+    };
+    
     var file;
     $scope.download = function() {
         var date = new Date();
         var filename = "dplace-societies-"+date.toJSON().replace(/T.*$/,'')+".csv"
         if (!file) {
-           $scope.disableCSVButton();
-            var queryObject = searchModelService.getModel().getQuery(); 
-            $http.post('/api/v1/csv_download', queryObject).then(function(data) {
-                file = new Blob([data.data], {type: 'text/csv'});
+            $scope.disableCSVButton();
+            // queryObject is the in-memory JS object representing the chosen search options
+            var queryObject = searchModelService.getModel().getQuery();
+            // the CSV download endpoint is a GET URL, so we must send the query object as a string.
+            var queryString = encodeURIComponent(JSON.stringify(queryObject));
+            // format (csv/svg/etc) should be an argument, and change the endpoint to /api/v1/download
+            var csvDownloadLink = "/api/v1/csv_download?query=" + queryString;
+            $http.get(csvDownloadLink).then(function(data) {
+               file = new Blob([data.data], {type: 'text/csv'});
                 saveAs(file, filename);
-                $scope.enableCSVButton();
-
+                $scope.enableCSVButton(); 
             });
         } else {
+            var filename = "dplace-societies-"+date.toJSON().replace(/T.*$/,'')+".csv"
             saveAs(file, filename);
-        }
+        }    
     };
+
 }

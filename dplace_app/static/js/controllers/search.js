@@ -158,6 +158,10 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties) 
                     }
                 
                 }
+            case 'variable':
+                while(object.length > 0) {
+                    $scope.removeFromSearch(object[0], 'culture')
+                }
         }
         if (!$scope.checkIfSelected()) {
             d3.select("#selected-criteria").classed("hidden", true);
@@ -212,6 +216,12 @@ function SearchCtrl($scope, colorMapService, searchModelService, FindSocieties) 
                     }
                 }
             }
+            
+            $scope.searchModel.results.classifications.sort(function(a,b) {
+                if (a.name < b.name) return -1;
+                else if (a.name > b.name) return 1;
+                else return 0;
+            })
         }
 
         for (var i = 0; i < $scope.searchModel.results.variable_descriptions.length; i++) {

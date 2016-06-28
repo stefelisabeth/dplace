@@ -252,7 +252,7 @@ def result_set_from_query_dict(query_dict):
                     Q(id=0))
                 if include_NA:
                     query = query | Q(coded_value='NA')
-                print query
+
                 values = models.CulturalValue.objects\
                     .filter(variable=variable)\
                     .filter(query)
@@ -506,17 +506,16 @@ def bin_cont_data(request):  # MAKE THIS GENERIC
             min_bin = min_bin + bin_size + 1
     return Response(bins)
 
-
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes((AllowAny,))
 @renderer_classes((DPLACECSVRenderer,))
 def csv_download(request):
-    result_set = result_set_from_query_dict(request.data)
+    query_dict = get_query_from_json(request)
+    result_set = result_set_from_query_dict(query_dict)
     response = Response(serializers.SocietyResultSetSerializer(result_set).data)
     filename = "dplace-societies-%s.csv" % datetime.datetime.now().strftime("%Y-%m-%d")
     response['Content-Disposition'] = 'attachment; filename="%s"' % filename
     return response
-
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
@@ -525,12 +524,12 @@ def zip_legends(request):
     # query_string = request.QUERY_PARAMS['query']
     result_set = request.data  # json.loads(query_string)
     to_download = serializers.ZipResultSet()
-    if 'name' in result_set:
-        to_download.name = str(result_set['name'])
-    if 'tree' in result_set:
-        to_download.tree = str(result_set['tree'])
-    if 'legends' in result_set:
-        for l in result_set['legends']:
+    if 't' in result_set:
+        to_download.tree = result_set['t'][0]
+    if 'n' in result_set:
+        to_download.name = result_set['n'][0]
+    if 'l' in result_set:
+        for l in result_set['l']:
             legend = serializers.Legend(l['name'], l['svg'])
             to_download.legends.append(legend)
     response = Response(serializers.ZipResultSetSerializer(to_download).data)
