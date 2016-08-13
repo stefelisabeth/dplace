@@ -4,7 +4,7 @@ angular.module('dplaceServices', ['ngResource'])
         $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     })
     .service('colorMapService', [ColorMapService])
-    .service('searchModelService',['VariableCategory','GeographicRegion','EnvironmentalCategory', 'LanguageFamily', 'DatasetSources', 'Language', SearchModelService])
+    .service('searchModelService',['VariableCategory','GeographicRegion','EnvironmentalCategory', 'LanguageFamily', 'DatasetSources', 'Language', 'FindSocieties', 'colorMapService', SearchModelService])
     .factory('LanguageFamily', function($resource) {
         return $resource(
             '/api/v1/language_families/:id',
@@ -212,16 +212,16 @@ angular.module('dplaceServices', ['ngResource'])
                 }
             });
     })
-    //not used at the moment
-    //.factory('TreesFromLanguages', function($resource) {
-     //   return $resource(
-      //      '/api/v1/trees_from_languages',
-       //     {},{
-        //        find: {
-         //           method: 'POST',
-          //          isArray: true
-           //     }
-           // }
-        //)
-    //})
+    
+    .factory('TreesFromSocieties', function($resource) {
+        return $resource(
+            '/api/v1/trees_from_societies',
+            {},{
+                find: {
+                    method: 'GET',
+                    isArray: true
+                }
+            }
+        )
+    })
     ;
