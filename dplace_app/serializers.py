@@ -12,7 +12,7 @@ SEARCH_GEOGRAPHIC = 'g'
 class SourceSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.Source
-
+        fields = '__all__'
 
 # Cultural Trait Variables
 class CulturalCodeDescriptionSerializer(serializers.ModelSerializer):
@@ -86,26 +86,30 @@ class CulturalValueSerializer(serializers.ModelSerializer):
 class ISOCodeSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.ISOCode
-
+        fields = '__all__'
 
 class EnvironmentalCategorySerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.EnvironmentalCategory
+        fields = '__all__'
 
 
 class EnvironmentalVariableSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.EnvironmentalVariable
+        fields = '__all__'
 
 
 class EnvironmentalValueSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.EnvironmentalValue
+        fields = '__all__'
 
 
 class LanguageFamilySerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.LanguageFamily
+        fields = '__all__'
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -201,10 +205,11 @@ class LanguageTreeLabelsSerializer(serializers.ModelSerializer):
 
 class LanguageTreeSerializer(serializers.ModelSerializer):
     taxa = LanguageTreeLabelsSerializer(many=True)
+    source = SourceSerializer()
 
     class Meta(object):
         model = models.LanguageTree
-        fields = ('id', 'name', 'taxa', 'newick_string')
+        fields = ('id', 'name', 'taxa', 'newick_string', 'source')
         
 
 class SocietyResult(object):
@@ -287,15 +292,3 @@ class LegendSerializer(serializers.Serializer):
     name = serializers.CharField()
     svg = serializers.CharField()
 
-
-class ZipResultSet(object):
-    def __init__(self):
-        self.tree = None
-        self.name = None
-        self.legends = []
-
-
-class ZipResultSetSerializer (serializers.Serializer):
-    tree = serializers.CharField()
-    name = serializers.CharField()
-    legends = LegendSerializer(many=True)

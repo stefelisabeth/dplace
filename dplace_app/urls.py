@@ -49,6 +49,8 @@ urlpatterns = [
     url(r'^howto/?$', views.angular, name='howto'),
     url(r'^howtocite/?$', views.angular, name='howtocite'),
     url(r'^source/?$', views.angular, name='source'),
+    url(r'^technology/?$', views.angular, name='technology'),
+    url(r'^legal/?$', views.angular, name='legal'),
     url(r'^team/?$', views.angular, name='team'),
     url(r'^publication/?$', views.angular, name='publication'),
 
@@ -61,6 +63,7 @@ urlpatterns = [
     url(r'^language/(?P<glottocode>.*)$',
         views.view_language,
         name='view_language'),
+    url(r'^download$', views.download_file, name='download'),
     url(r'^angular/$', views.angular, name='angular'),
     # API
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
@@ -73,7 +76,6 @@ urlpatterns = [
         api_views.get_dataset_sources,
         name="get_dataset_sources"),
     url(r'^api/v1/csv_download', api_views.csv_download, name='csv_download'),
-    url(r'^api/v1/zip', api_views.zip_legends, name='zip_legends'),
     url(r'^api/v1/trees_from_societies', api_views.trees_from_societies, name='trees_from_societies'),
 
     # catch anything else and let decide angular what to do

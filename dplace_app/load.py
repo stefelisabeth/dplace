@@ -11,8 +11,9 @@ django.setup()
 
 from django.db import transaction
 from django.conf import settings
+from clldutils.dsv import reader
 
-from load.util import configure_logging, csv_dict_reader
+from load.util import configure_logging
 from load.society import society_locations, load_societies
 from load.environmental import load_environmental, load_environmental_var
 from load.geographic import load_regions
@@ -23,14 +24,14 @@ from load.sources import load_references
 from load.glottocode import xd_to_language
 
 
-def data_path(category, *comps):
-    return os.path.join(os.path.dirname(__file__), '..', 'datasets', category, *comps)
+def data_path(*comps):
+    return os.path.join(os.path.dirname(__file__), '..', 'datasets', *comps)
 
 csv_path = partial(data_path, 'csv')
 
 
 def csv_items(*names):
-    return chain(*[csv_dict_reader(csv_path(name)) for name in names])
+    return chain(*[reader(csv_path(name), dicts=True) for name in names])
 
 
 def csv_names(pattern):
@@ -56,16 +57,16 @@ def main():  # pragma: no cover
         (load_data, csv_items(*csv_names('%s_data.csv'))),
         (load_environmental_var, csv_items('environmentalVariableList.csv')),
         (load_environmental, csv_items('environmental_data.csv')),
-        (load_trees, data_path('trees')),
-        (tree_names, data_path('csv')),
+        (load_trees, data_path()),
+        (tree_names, data_path()),
         (prune_trees,),
     ]:
         with transaction.atomic():
             loader, args = spec[0], spec[1:]
-            print loader.__name__, '...'
+            print("%s..." % loader.__name__)
             start = time()
             res = loader(*args)
-            print res, 'loaded in', time() - start, 'secs'
+            print("%s loaded in %s secs" % (res, time() - start))
 
 
 if __name__ == '__main__':  # pragma: no cover
