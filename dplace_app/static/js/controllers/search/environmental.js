@@ -1,4 +1,6 @@
-function EnvironmentalCtrl($scope, searchModelService, EnvironmentalVariable, EnvironmentalValue, MinAndMax, CodeDescription) {
+//remove code to search.js
+
+function EnvironmentalCtrl($scope, searchModelService, Variable, MinAndMax, CodeDescription) {
     var linkModel = function() {
         // Get a reference to the environmental search params from the model
         $scope.environmentalData = searchModelService.getModel().getEnvironmentalData();
@@ -11,11 +13,13 @@ function EnvironmentalCtrl($scope, searchModelService, EnvironmentalVariable, En
     linkModel();
     
     $scope.categoryChanged = function(variable) {
-        variable.variables = EnvironmentalVariable.query({index_categories: [variable.selectedCategory.id]});
+        variable.indexVariables = Variable.query({index_categories: [variable.selectedCategory.id]});
+        console.log(variable.indexVariables);
     };
     
     $scope.addVariable = function() {
         $scope.environmentalData.selectedVariables.push({'vals': ['', ''], 'selectedFilter': $scope.environmentalData.selectedFilter, 'variables': []});
+        console.log($scope.environmentalData.selectedVariables);
     };
     
     $scope.variableChanged = function(variable) {

@@ -219,26 +219,33 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
         for (var propertyName in searchParams) {
             //get selected cultural traits/codes
             if (propertyName == 'culturalTraits') {
-                var codes = [];
-                for (var variable in searchParams[propertyName].selected) {
-                    searchParams[propertyName].selected[variable].forEach(function(code) { if (code.isSelected) codes.push(code); });
-                };
-                if (codes.length > 0) {
-                    searchQuery['c'] = [];
-                    for (i = 0; i < codes.length; i++) {
-                        pruned = codes[i].variable;
-                        if ('id' in codes[i]) {
-                            pruned += '-' + codes[i].id;
+                  searchParams[propertyName].selectedVariables.forEach(function(variable) {
+                        filters = []
+                        if (variable.data_type == 'Continuous') {
+                            filters = [
+                                variable.id,
+                                variable.selectedFilter.operator,
+                                variable.vals
+                            ];
+                            
+                        } else { 
+                            if (variable.selected.length>0) {
+                                filters = [
+                                    variable.id,
+                                    'categorical',
+                                    variable.selected
+                                ]
+                            } else filters = []
                         }
-                        if ('min' in codes[i]) {
-                            pruned += '-' + codes[i].min;
+                        if (filters.length > 0){
+                            if ('c' in searchQuery) {
+                                searchQuery['c'].push(filters);
+                            } else {
+                                searchQuery['c'] = [filters];
+                            }
                         }
-                        if ('max' in codes[i]) {
-                            pruned += '-' + codes[i].max;
-                        }
-                        searchQuery['c'].push(pruned.toString());
-                    }
-                }
+                    
+                });
             }
             //get selected regions
             if (propertyName == 'geographicRegions') {

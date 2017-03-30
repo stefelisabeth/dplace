@@ -1,8 +1,12 @@
-function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, ContinuousVariable, DatasetSources, getCategories) {
+//remove variable from search if all codes unselected
+//move remove code into search.js
+
+function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, ContinuousVariable, DatasetSources, getCategories, MinAndMax) {
    var linkModel = function() {
         // Model/state lives in searchModelService
         $scope.traits = [searchModelService.getModel().getCulturalTraits()];
         $scope.errors = "";
+        $scope.filters = searchModelService.getModel().getEnvironmentalData().filters;
         numVars();
     };
     
@@ -20,7 +24,6 @@ function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, Con
     $scope.categoryChanged = function(trait) {
         trait.indexVariables = Variable.query({index_categories: trait.selectedCategory.id, source: trait.selectedSource.id});
 		trait.codes = [];
-        trait.selectedCode = "";
     };
     
     function numVars() {
@@ -37,109 +40,95 @@ function CulturalCtrl($scope, searchModelService, Variable, CodeDescription, Con
     
     $scope.$on('variableCheck', numVars);
     
+    function codeSelected(variable, code) {
+        if(code.isSelected) {
+            if (variable.selected.map(function(v) { return v.id; }).indexOf(code.id) == -1) variable.selected.push(code);
+        } else {
+            index = variable.selected.map(function(m) { return m.id; }).indexOf(code.id);
+            variable.selected.splice(index, 1);
+        }
+        if (variable.selected.length == variable.codes.length) variable.allSelected = true;
+        else variable.allSelected = false;
+    };
+    
     // triggered by the view when a trait is changed in the picker
     $scope.traitChanged = function(trait) {
-        trait.selectedCode = "";
         if (trait.selectedVariable.data_type.toUpperCase() == 'CONTINUOUS') {
-            trait.codes = ContinuousVariable.query({query: {bf_id: trait.selectedVariable.id}});
+                        trait.selectedVariables.push(trait.selectedVariable);
+
+            trait.selectedVariable.selectedFilter = $scope.filters[0];
+            trait.CulturalForm.$setPristine();
+            $scope.values = MinAndMax.query({query: {environmental_id: trait.selectedVariable.id}});
+            console.log($scope.values);
+            $scope.filterChanged(trait);
+            return;
         } else
-            trait.codes = CodeDescription.query({variable: trait.selectedVariable.id });
+            trait.selectedVariable.codes = CodeDescription.query({variable: trait.selectedVariable.id });
         
-        //make select all the default
-        if (trait.selectedVariable.id in trait.selected) {
-            trait.codes.$promise.then(function(result) { 
-                result.forEach(function(code) {
-                    if (trait.selectedVariable.data_type.toUpperCase() == 'CONTINUOUS'){
-                        if (trait.selected[trait.selectedVariable.id].map(function(c) { return c.variable+''+c.code; }).indexOf(code.variable+''+code.code) != -1) {
-                            code.isSelected = true;
-                        }
-                    } else if (trait.selected[trait.selectedVariable.id].map(function(c) { return c.id; }).indexOf(code.id) != -1)
-                        code.isSelected = true;
-                });
-                numVars();
-            });
-        } else {
-            trait.codes.$promise.then(function(result) {
-                result.forEach(function(code) {
-                    code.isSelected = true;
-                    if (trait.selectedVariable.data_type.toUpperCase() == 'CONTINUOUS') code.short_description = code.description;
-                    if (code.variable in trait.selected) {
-                        if (trait.selectedVariable.data_type.toUpperCase() == 'CONTINUOUS') {
-                            if (trait.selected[code.variable].map(function(c) { return c.variable+''+c.code; }).indexOf(code.variable+''+code.code) == -1) {
-                                trait.selected[code.variable].push(code);
-                            }
-                        } else if (trait.selected[code.variable].map(function(c) { return c.id; }).indexOf(code.id) == -1) {
-                            trait.selected[code.variable].push(code);
-                        }
-                    } else {
-                        trait.selected[code.variable] = [code];
-                        trait.selected[code.variable].variable_name = trait.selectedVariable.label + ' - ' + trait.selectedVariable.name;
+        if (trait.selectedVariables.indexOf(trait.selectedVariable) == -1){ 
+            trait.selectedVariable.selected = [];
+        }
+
+        //make select all the default if variable hasn't been chosen already
+        if (trait.selectedVariables.indexOf(trait.selectedVariable) != -1) {
+            trait.selectedVariable.codes.$promise.then(function(result) {
+                result.forEach(function(c) {
+                    if (trait.selectedVariable.selected.map(function(m) { return m.id; }).indexOf(c.id) != -1) {
+                        c.isSelected = true;
                     }
                 });
-                trait.selected[trait.selectedVariable.id].allSelected = true;
-                numVars();
+            });
+            
+        
+        } else {
+            trait.selectedVariables.push(trait.selectedVariable);
+            $scope.count += 1;
+            trait.selectedVariable.codes.$promise.then(function(result) {
+                result.forEach(function(c) {
+                    c.isSelected = true;
+                    codeSelected(trait.selectedVariable, c);
+                    
+                });
+            });
+            
+        }       
+    };
+    
+    $scope.selectAll = function(variable) {
+        if (variable.allSelected) {
+            variable.codes.forEach(function(c) {
+                c.isSelected = true;
+                codeSelected(variable, c);
+            });
+        } else {
+            variable.codes.forEach(function(c) {
+                c.isSelected = false;
+                codeSelected(variable, c);
             });
         }
     };
     
-    $scope.traitCodeSelectionChanged = function(trait, code) {
-        if (code.isSelected) {
-            if (code.variable in trait.selected) {
-                if (trait.selectedVariable.data_type.toUpperCase() == 'CONTINUOUS') {
-                    code.short_description = code.description;
-                    if (trait.selected[code.variable].map(function(c) { return c.variable+''+c.code; }).indexOf(code.variable+''+code.code) == -1) 
-                        trait.selected[code.variable].push(code);
-                } else if (trait.selected[code.variable].map(function(c) { return c.id; }).indexOf(code.id) == -1) 
-                    trait.selected[code.variable].push(code);
-            } else 
-                trait.selected[code.variable] = [code];
-                trait.selected[code.variable].variable_name = trait.selectedVariable.label + ' - ' + trait.selectedVariable.name;
-        } else {
-            $scope.removeFromSearch(code, 'culture');
-        }
-        if (trait.selected[code.variable].length == trait.codes.length) trait.selected[code.variable].allSelected = true;
-        else trait.selected[code.variable].allSelected = false;
-        numVars();
+    $scope.traitCodeSelectionChanged = function(variable, code) {     
+        codeSelected(variable, code);
     };
-
-    // used before searching to extract the codes from the search selection
-    // Expects an array of CulturalTraitModel objects
-	// this only gets the selected codes for the currently selected cultural trait
-    $scope.getSelectedTraitCodes = function() {
-		traits = $scope.traits;
-		var allCodes = Array.prototype.concat.apply([], traits.map( function(trait) { 
-			return trait.codes; 
-		}));
-		return allCodes.filter( function(c) { return c.isSelected; });
-    };
-	
-	$scope.selectAllChanged = function(trait) {
-        if (trait.selectedVariable.id in trait.selected) {
-            if (trait.selected[trait.selectedVariable.id].allSelected) { // all selected
-                trait.codes.forEach(function(code) {
-                    code.isSelected = true;
-                    if (trait.selectedVariable.data_type.toUpperCase() == 'CONTINUOUS') {
-                        code.short_description = code.description;
-                        if (trait.selected[trait.selectedVariable.id].map(function(c) { return c.variable+''+c.code; }).indexOf(code.variable+''+code.code) == -1) {
-                            trait.selected[trait.selectedVariable.id].push(code);
-                        }
-                    } else {
-                        if(trait.selected[trait.selectedVariable.id].map(function(c) { return c.id; }).indexOf(code.id) == -1) 
-                            trait.selected[trait.selectedVariable.id].push(code);
-                    }
-                });
-            } else { // deselect all
-                trait.codes.forEach(function(code) {
-                    code.isSelected = false;
-                    $scope.removeFromSearch(code, 'culture');
-                });
-            }
+    
+    $scope.filterChanged = function(variable) {
+        if (variable.CulturalForm.$dirty && variable.selectedFilter.operator != 'all') return;
+        selected_variable = variable.selectedVariables.filter(function(env_var) {
+            return env_var.id == variable.selectedVariable.id;
+        });
+        if (selected_variable.length == 1) {
+            console.log(selected_variable);
+            $scope.values.$promise.then(function(result) {
+                selected_variable[0].vals = [result.min, result.max];
+            });
         }
-        numVars();
-	};
+        
+    };
 
     // wired to the search button. Gets the code ids, adds cultural to the query, and invokes the search
     $scope.doSearch = function() {
+        console.log($scope.traits);
         if ($scope.count > 4) {
             $scope.errors = "Error, search is limited to 4 variables";
             return;

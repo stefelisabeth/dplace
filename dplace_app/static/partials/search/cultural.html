@@ -32,8 +32,8 @@
     <h5  class="pull-left" style="padding-left: 5mm !important; line-height:10px;">Note: Search is limited to 4 cultural variables maximum</h5>
     <h5 ng-show="count > 0 && !errors" style="padding-right:5mm !important" ng-class="{'text-danger': count > 4}" class="pull-right">Number of variables selected: {{ count }}</h5>
 
-    <form class="form-inline" role="form" style="margin-top:35px;">
-        <div class="panel panel-default" ng-repeat="trait in traits">
+    <form class="form-inline" role="form" style="margin-top:35px;" ng-repeat="trait in traits" name="trait.CulturalForm">
+        <div class="panel panel-default" >
             <div class="panel-heading">
                 <div class="row">
                     <div class="form-group col-xs-3">
@@ -63,7 +63,9 @@
                             <option value="">Select a Category</option>
                         </select>
                     </div>
-                    <div class="form-group col-xs-6">
+                    </div>
+                    <div class="row row-margin-top" ng-show="trait.selectedSource">
+                    <div class="form-group col-xs-4">
                         <select
                                 ng-model="trait.selectedVariable"
                                 class="form-control"
@@ -74,18 +76,92 @@
                                 >
                             <option value="">Select a Variable</option>
                         </select>
+                        </div>
+                    <div ng-show="trait.selectedVariable.data_type == 'Continuous'">
+                    <div class="form-group col-xs-2">
+                            <div class="dropdown">
+                                <button class="btn btn-default dropdown-toggle form-control">{{ trait.selectedVariable.selectedFilter.name }} <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li ng-repeat="filter in filters">
+                                        <a ng-click="trait.selectedVariable.selectedFilter = filter; filterChanged(trait);">{{ filter.name }}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="trait.selectedVariable.selectedFilter.operator == 'inrange'">
+                            <div class="form-group col-xs-3" ng-class="{'has-error':trait.CulturalForm.vals0inrange.$invalid && trait.CulturalForm.vals0inrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals0inrange" class="form-control input-xs" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="trait.selectedVariable.vals[0]" required/>
+                                    <span class="input-group-addon">{{ trait.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-3" ng-class="{'has-error':trait.CulturalForm.vals1inrange.$invalid && trait.CulturalForm.vals1inrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals1inrange" class="form-control" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="trait.selectedVariable.vals[1]" required/>
+                                    <span class="input-group-addon">{{ trait.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="trait.selectedVariable.selectedFilter.operator == 'outrange'">
+                            <div class="form-group col-xs-3" ng-class="{'has-error':trait.CulturalForm.vals0outrange.$invalid && trait.CulturalForm.vals0outrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals0outrange" class="form-control input-xs" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="variable.selectedVariable.vals[0]" />
+                                    <span class="input-group-addon">{{ trait.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-3" ng-class="{'has-error':trait.CulturalForm.vals1outrange.$invalid && trait.CulturalForm.vals1outrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals1outrange" class="form-control" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]+)$/" ng-model="variable.selectedVariable.vals[1]" />
+                                    <span class="input-group-addon">{{ trait.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="trait.selectedVariable.selectedFilter.operator == 'lt'">
+                            <div class="form-group col-xs-6" ng-class="{'has-error':trait.CulturalForm.valslt.$invalid && trait.CulturalForm.valslt.$dirty}">
+                                <div class="input-group">
+                                    <input name="valslt" class="form-control input-xs" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="variable.selectedVariable.vals[1]" />
+                                    <span class="input-group-addon">{{ trait.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="trait.selectedVariable.selectedFilter.operator == 'gt'">
+                            <div class="form-group col-xs-6" ng-class="{'has-error':trait.CulturalForm.valsgt.$invalid && trait.CulturalForm.valsgt.$dirty}">
+                                <div class="input-group">
+                                    <input name="valsgt" class="form-control" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]+)$/" ng-model="variable.selectedVariable.vals[0]" />
+                                    <span class="input-group-addon">{{ trait.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="trait.selectedVariable.selectedFilter.operator == 'all'">
+                            <div class="form-group col-xs-3" ng-class="{'has-error': trait.CulturalForm.vals0all.$invalid && trait.CulturalForm.vals0all.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals0all" class="form-control input-xs" ng-readonly="true" ng-model="variable.selectedVariable.vals[0]" />
+                                    <span class="input-group-addon"> {{ trait.selectedVariable.units }} </span>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-3" ng-class="{'has-error': trait.CulturalForm.vals0all.$invalid && trait.CulturalForm.vals1all.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals1all" class="form-control input-xs" ng-readonly="true" ng-model="variable.selectedVariable.vals[1]" />
+                                    <span class="input-group-addon"> {{ trait.selectedVariable.units }} </span>
+                                </div>
+                            </div>           
+                        </div>
                     </div>
-                </div>
+                
+                
+                
                 <div ng-show="trait.codes.length > 0">Further Information: {{trait.selectedVariable.codebook_info}}</div>
+                </div>
+
             </div>
 			
 	
-            <div class="panel-body scrollable">
-                <span class="variable-label" ng-show="trait.codes.length > 1"> Select All
-				<input type="checkbox" class="pull-left" ng-model="trait.selected[trait.selectedVariable.id].allSelected" ng-change="selectAllChanged(trait)" />
+            <div class="panel-body scrollable" ng-show="trait.selectedVariable.data_type == 'Categorical'">
+                <span class="variable-label" ng-show="trait.selectedVariable.codes.length > 1"> Select All
+				<input type="checkbox" class="pull-left" ng-model="trait.selectedVariable.allSelected" ng-change="selectAll(trait.selectedVariable)" />
               </span>
-				<div ng-repeat="code in trait.codes">
-                    <input type="checkbox" class="pull-left" ng-model="code.isSelected" ng-change="traitCodeSelectionChanged(trait, code)"/>
+				<div ng-repeat="code in trait.selectedVariable.codes">
+                    <input type="checkbox" class="pull-left" ng-model="code.isSelected" ng-change="traitCodeSelectionChanged(trait.selectedVariable, code)"/>
                     <span class="variable-label pull-left">{{ code.code }}:</span>
                     <span class="variable-description">{{ code.description }}</span>
                 </div>

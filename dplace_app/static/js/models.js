@@ -57,7 +57,7 @@ function SearchModel(VariableCategory, GeographicRegion, EnvironmentalCategory, 
 function CulturalTraitModel(VariableCategory, DatasetSources) {
     this.categories = VariableCategory.query(); // these objects get annotated with variables
     this.sources = DatasetSources.query();
-    this.selected = {};
+    this.selectedVariables = [];
     this.selectedCategory = null;
     this.selectedVariable = null;
     this.badgeValue = 0;
