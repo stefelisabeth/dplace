@@ -1,0 +1,144 @@
+<div ng-controller="VariableSearchCtrl">
+    <form ng-repeat="variable in variables" class="form-inline" style="margin-top:20px;" role="form" ng-submit="submit()" name="variable.VariableForm" novalidate>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row" ng-show="model.searchParams.selectedButton.value == 'cultural'">
+                    <div class="form-group col-xs-3">
+                        <select
+                            ng-model="variable.selectedSource"
+                            class="form-control"
+                            ng-change="sourceChanged(variable)"
+                            ng-options='source as (source.name) for source in variable.sources'
+                            >
+                            <option value="">Select a Source</option>
+                        </select>
+                     </div>
+                     <div class="form-group col-xs-8">
+                        <div style="padding-left:5mm !important"><small>Choose a cross-cultural dataset to begin your search.<br />For more information, see “<a target="_new" href="/source">Data Sources</a>” under the “Info” menu.</small></div>
+                     </div>
+                </div>
+
+                <div class="row" ng-show="variable.selectedSource || model.searchParams.selectedButton.value == 'environmental'">
+                    <div class="form-group col-xs-4">
+                        <select
+                            ng-model="variable.selectedCategory"
+                            class="form-control"
+                            ng-options="category.name for category in variable.categories"
+                            ng-change="categoryChanged(variable)"
+                            >
+                            <option value="">Select a category</option>
+                        </select>
+                    </div>
+                    
+                    <div class="pull-right"> 
+                        <button class="btn btn-default btn-sm" style="margin-right:10px;" ng-show="$index > 0" ng-click="removeFromSearch(variable, 'environmental')"><span class="glyphicon glyphicon-minus" style="padding-right:3px;" aria-hidden="true"></span>Remove this variable</button>
+                    </div>
+                </div>
+			
+                <div class="row row-margin-top">
+                    <div class="form-group col-xs-4">
+                        <select
+                                ng-model="variable.selectedVariable"
+                                class="form-control"
+                                ng-options="v.name for v in variable.indexVariables"
+                                ng-change="variableChanged(variable)"
+                                ng-show="variable.indexVariables.length > 0"
+                                style="width:100%;"
+                                >
+                            <option value="">Select a Variable</option>
+                        </select>
+                    </div>
+                    
+                    <div ng-show="variable.selectedVariable.data_type == 'Continuous'">
+                        <div class="form-group col-xs-2">
+                            <div class="dropdown">
+                                <button class="btn btn-default dropdown-toggle form-control">{{ variable.selectedVariable.selectedFilter.name }} <span class="caret"></span></button>
+                                <ul class="dropdown-menu">
+                                    <li ng-repeat="filter in filters">
+                                        <a ng-click="variable.selectedVariable.selectedFilter = filter; filterChanged(variable);">{{ filter.name }}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="variable.selectedVariable.selectedFilter.operator == 'inrange'">
+                            <div class="form-group col-xs-3" ng-class="{'has-error':variable.VariableForm.vals0inrange.$invalid && variable.VariableForm.vals0inrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals0inrange" class="form-control input-xs" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="variable.selectedVariable.vals[0]" required/>
+                                    <span class="input-group-addon">{{ variable.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-3" ng-class="{'has-error':variable.VariableForm.vals1inrange.$invalid && variable.VariableForm.vals1inrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals1inrange" class="form-control" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="variable.selectedVariable.vals[1]" required/>
+                                    <span class="input-group-addon">{{ variable.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="variable.selectedVariable.selectedFilter.operator == 'outrange'">
+                            <div class="form-group col-xs-3" ng-class="{'has-error':variable.VariableForm.vals0outrange.$invalid && variable.VariableForm.vals0outrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals0outrange" class="form-control input-xs" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="variable.selectedVariable.vals[0]" />
+                                    <span class="input-group-addon">{{ variable.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-3" ng-class="{'has-error':variable.VariableForm.vals1outrange.$invalid && variable.VariableForm.vals1outrange.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals1outrange" class="form-control" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]+)$/" ng-model="variable.selectedVariable.vals[1]" />
+                                    <span class="input-group-addon">{{ variable.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="variable.selectedVariable.selectedFilter.operator == 'lt'">
+                            <div class="form-group col-xs-6" ng-class="{'has-error':variable.VariableForm.valslt.$invalid && variable.VariableForm.valslt.$dirty}">
+                                <div class="input-group">
+                                    <input name="valslt" class="form-control input-xs" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]*)$/" ng-model="variable.selectedVariable.vals[1]" />
+                                    <span class="input-group-addon">{{ variable.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="variable.selectedVariable.selectedFilter.operator == 'gt'">
+                            <div class="form-group col-xs-6" ng-class="{'has-error':variable.VariableForm.valsgt.$invalid && variable.VariableForm.valsgt.$dirty}">
+                                <div class="input-group">
+                                    <input name="valsgt" class="form-control" ng-pattern="/^(0|\-?[0-9][0-9]*\.?[0-9]+)$/" ng-model="variable.selectedVariable.vals[0]" />
+                                    <span class="input-group-addon">{{ variable.selectedVariable.units }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fields-inrange" ng-show="variable.selectedVariable.selectedFilter.operator == 'all'">
+                            <div class="form-group col-xs-3" ng-class="{'has-error': variable.VariableForm.vals0all.$invalid && variable.VariableForm.vals0all.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals0all" class="form-control input-xs" ng-readonly="true" ng-model="variable.selectedVariable.vals[0]" />
+                                    <span class="input-group-addon"> {{ variable.selectedVariable.units }} </span>
+                                </div>
+                            </div>
+                            <div class="form-group col-xs-3" ng-class="{'has-error': variable.VariableForm.vals0all.$invalid && variable.VariableForm.vals1all.$dirty}">
+                                <div class="input-group">
+                                    <input name="vals1all" class="form-control input-xs" ng-readonly="true" ng-model="variable.selectedVariable.vals[1]" />
+                                    <span class="input-group-addon"> {{ variable.selectedVariable.units }} </span>
+                                </div>
+                            </div>           
+                        </div>
+                    </div>
+                </div>
+                <div ng-show="variable.selectedVariable">Further information: {{ variable.selectedVariable.codebook_info }}</div>
+            </div>
+            
+            <div class="panel-body scrollable" ng-show="variable.selectedVariable.codes.length > 0">
+                <span class="variable-description" ng-show="variable.selectedVariable.codes.length > 1">Select All
+                    <input type="checkbox" class="pull-left" ng-model="variable.selectedVariable.allSelected" ng-change="selectAll(variable.selectedVariable)" />
+                </span>
+                <div ng-repeat="code in variable.selectedVariable.codes">
+                    <input type="checkbox" class="pull-left" ng-model="code.isSelected" ng-change="codeSelected(variable.selectedVariable, code)"/>
+                    <span class="variable-description">{{ code.description }}</span>
+                </div>
+            
+            </div>
+            
+        </div>
+        
+    </form>
+    <div class="pull-right" ng-show="model.searchParams.selectedButton.value == 'environmental'">
+        <button class="btn btn-default btn-sm" style="margin-right:10px;" ng-click="addVariable()" ng-show="variables.length < 3"><span class="glyphicon glyphicon-plus" style="padding-right:3px;" aria-hidden="true"></span>Add another environmental variable</button>
+    </div>
+
+</div>
