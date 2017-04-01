@@ -66,7 +66,6 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/find_societies', api_views.find_societies, name='find_societies'),
     url(r'^api/v1/min_and_max', api_views.get_min_and_max, name="min_and_max"),
-    url(r'^api/v1/cont_variable', api_views.bin_cont_data, name="cont_variable"),
     url(r'^api/v1/get_categories', api_views.get_categories, name="get_categories"),
     url(r'^api/v1/get_dataset_sources',
         api_views.get_dataset_sources,

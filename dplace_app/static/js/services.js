@@ -4,7 +4,7 @@ angular.module('dplaceServices', ['ngResource'])
         $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     })
     .service('colorMapService', [ColorMapService])
-    .service('searchModelService',['VariableCategory','GeographicRegion','EnvironmentalCategory', 'LanguageFamily', 'DatasetSources', 'Language', 'FindSocieties', 'colorMapService', SearchModelService])
+    .service('searchModelService',['VariableCategory','GeographicRegion', 'LanguageFamily', 'DatasetSources', 'Language', 'FindSocieties', 'colorMapService', SearchModelService])
     .factory('LanguageFamily', function($resource) {
         return $resource(
             '/api/v1/language_families/:id',
@@ -102,20 +102,6 @@ angular.module('dplaceServices', ['ngResource'])
                 }
             });
     })
-    .factory('EnvironmentalValue', function($resource) {
-        return $resource(
-            '/api/v1/environmental_values/:id',
-            {}, {
-                query: {
-                    method: 'GET',
-                    isArray: true,
-                    transformResponse: function(data, headers) {
-                        return JSON.parse(data).results;
-                    }
-                }
-            }
-        )
-    })
     .factory('MinAndMax', function($resource) {
         return $resource(
             '/api/v1/min_and_max',
@@ -148,46 +134,6 @@ angular.module('dplaceServices', ['ngResource'])
                 }
             }
         )
-    })
-    .factory('ContinuousVariable', function($resource) {
-        return $resource(
-            '/api/v1/cont_variable',
-            {}, {
-                query: {
-                    method: 'GET',
-                    isArray:true,
-                    transformResponse: function(data, headers) {
-                        return JSON.parse(data);
-                    }
-                }
-            }
-        )
-    })
-    .factory('EnvironmentalCategory', function($resource) {
-        return $resource(
-            '/api/v1/categories/:id',
-            {type: "environmental"}, {
-                query: {
-                    method: 'GET',
-                    isArray: true,
-                    transformResponse: function(data, headers) {
-                        return JSON.parse(data).results;
-                    }
-                }
-            });
-    })
-    .factory('EnvironmentalVariable', function ($resource) {
-        return $resource(
-            '/api/v1/variables/:id',
-            {page_size: 1000, type: "environmental"}, {
-                query: {
-                    method: 'GET',
-                    isArray: true,
-                    transformResponse: function(data, headers) {
-                        return JSON.parse(data).results;
-                    }
-                }
-            });
     })
     .factory('FindSocieties', function($resource) {
         return $resource(

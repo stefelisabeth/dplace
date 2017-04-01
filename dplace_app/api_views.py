@@ -214,11 +214,11 @@ def result_set_from_query_dict(query_dict):
     if 'c' in query_dict:
         variables = {
             v.id: v for v in models.Variable.objects
-            .filter(id__in=[int(x[0]) for x in query_dict['c']])
+            .filter(id__in=[x[0] for x in query_dict['c']])
             .prefetch_related(Prefetch(
                 'codes',
                 queryset=models.CodeDescription.objects
-                .filter(id__in=[int(x[0]) for x in query_dict['c']])))
+                .filter(id__in=[x[0] for x in query_dict['c']])))
         }
 
         for varid, criteria in groupby(
@@ -244,8 +244,7 @@ def result_set_from_query_dict(query_dict):
                 elif operator == 'lt':
                     sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[0]))
                 elif operator == 'categorical':
-                    assert all ('id' in c for c in params)
-                    sql_where.append("{0}.code_id IN %s".format(alias) % id_array([x['id'] for x in params]))
+                    sql_where.append("{0}.code_id IN %s".format(alias) % id_array(params))
 
         for variable in models.Variable.objects.filter(id__in=[x[0] for x in query_dict['c']]):
             result_set.variable_descriptions.add(serializers.VariableCode(variable.codes, variable))
@@ -274,8 +273,7 @@ def result_set_from_query_dict(query_dict):
                 elif operator == 'lt':
                     sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[0]))
                 elif operator == 'categorical':
-                    assert all ('id' in c for c in params)
-                    sql_where.append("{0}.code_id IN %s".format(alias) % id_array([x['id'] for x in params]))
+                    sql_where.append("{0}.code_id IN %s".format(alias) % id_array(params))
 
         for variable in models.Variable.objects.filter(id__in=[x[0] for x in query_dict['e']]):
             result_set.environmental_variables.add(variable)
@@ -442,7 +440,7 @@ class GeographicRegionViewSet(viewsets.ReadOnlyModelViewSet):
 @renderer_classes((JSONRenderer,))
 def get_min_and_max(request):
     res = {}
-    varid = get_query_from_json(request).get('environmental_id')
+    varid = get_query_from_json(request).get('id')
     if varid:
         values = [
             v.coded_value_float for v in models.Value.objects.filter(variable__id=varid)
@@ -451,55 +449,6 @@ def get_min_and_max(request):
         vmax = max(values) if values else 0.0
         res = {'min': format(vmin, '.4f'), 'max': format(vmax, '.4f')}
     return Response(res)
-
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-@renderer_classes((JSONRenderer,))
-def bin_cont_data(request):  # MAKE THIS GENERIC
-    bf_id = get_query_from_json(request).get('bf_id')
-    bins = []
-    if bf_id:
-        values = models.Value.objects.filter(variable__id=bf_id)
-        min_value = None
-        max_value = 0.0
-        missing_data_option = False
-        for v in values:
-            if re.search('[a-zA-Z]', v.coded_value):
-                if not missing_data_option:
-                    bins.append({
-                        'code': v.coded_value,
-                        'description': v.code.description,
-                        'variable': bf_id,
-                    })
-                    missing_data_option = True
-                continue
-            else:
-                v.coded_value = v.coded_value.replace(',', '')
-                if min_value is None:
-                    min_value = float(v.coded_value)
-                elif float(v.coded_value) < min_value:
-                    min_value = float(v.coded_value)
-                elif float(v.coded_value) > max_value:
-                    max_value = float(v.coded_value)
-
-        min_value = min_value or 0.0  # This is the case when there are no values!
-        data_range = max_value - min_value
-        bin_size = data_range / 5
-        min_bin = min_value
-        for x in range(0, 5):
-            min = min_bin
-            max = min_bin + bin_size
-            bins.append({
-                'code': x,
-                'description': str(min) + ' - ' + str(max),
-                'min': min_bin,
-                'max': min_bin + bin_size,
-                'variable': bf_id,
-            })
-            min_bin = min_bin + bin_size + 1
-    return Response(bins)
-
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
