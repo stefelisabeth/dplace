@@ -103,13 +103,7 @@ function ColorMapService() {
 
     this.generateColorMap = function(results) {
         var colors = {};
-        if (results.geographic_regions.length > 0) {
-            results.geographic_regions.sort(function(a,b) {
-                if (a.region_nam.toLowerCase() < b.region_nam.toLowerCase()) return -1;
-                else if (a.region_nam.toLowerCase() > b.region_nam.toLowerCase()) return 1;
-                else return 0;
-            })
-        }   
+        
         for (var i = 0; i < results.societies.length; i++) {
             var society = results.societies[i];
             if (society.society.region) {
@@ -154,7 +148,7 @@ function ColorMapService() {
                     var color = this.generateRandomHue(society.variable_coded_values[j].coded_value, variable_description[0].codes.length, variable_description[0].variable.id, 5);
                     colors[society.society.id] = color;
                 } else if (variable_description[0].variable.data_type.toUpperCase() == 'CONTINUOUS') {
-                    var color = this.mapColorMonochrome(variable_description[0].variable.min, variable_description[0].variable.max, society.variable_coded_values[j].coded_value, 0);
+                    var color = this.mapColorMonochrome(variable_description[0].min, variable_description[0].max, society.variable_coded_values[j].coded_value_float, 0);
                     colors[society.society.id] = color;
                 } else {
                     if (society.variable_coded_values[j].coded_value == 'NA') {

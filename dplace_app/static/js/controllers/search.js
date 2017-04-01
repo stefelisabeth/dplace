@@ -73,7 +73,8 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
             for (var i = 0; i < object.length; i++) {
                 if (object[i].selectedVariable) return false;
             }
-        } else {
+        } 
+        else {
             for (var key in object) {
                 if (object[key].length > 0)
                     return false;
@@ -98,7 +99,12 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                 if ($scope.searchModel.getEnvironmentalData().selectedVariables[i].selectedVariable) return true;
             }
         }
-        if (!$scope.isEmpty($scope.searchModel.getCulturalTraits().selected)) return true;
+        if ($scope.searchModel.getCulturalTraits().selectedVariables.length > 0) {
+            for (var i = 0; i < $scope.searchModel.getCulturalTraits().selectedVariables.length; i++) {
+                if ($scope.searchModel.getCulturalTraits().selectedVariables[i].data_type.toLowerCase() == 'continuous') return true;
+                if ($scope.searchModel.getCulturalTraits().selectedVariables[i].selected.length > 0) return true;
+            }
+        }
         if (!$scope.isEmpty($scope.searchModel.getLanguageClassifications().selected)) return true;
         return false;
     }
@@ -146,22 +152,16 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     }
                 }
                 break;
-            case 'culture': 
-                if (object.variable in $scope.searchModel.getCulturalTraits().selected) {
-                    for (var i = 0; i < $scope.searchModel.getCulturalTraits().selected[object.variable].length; i++) {
-                        if (($scope.searchModel.getCulturalTraits().selected[object.variable][i].id == object.id) || ($scope.searchModel.getCulturalTraits().selected[object.variable][i].description == object.description)) {
-                            $scope.searchModel.getCulturalTraits().selected[object.variable][i].isSelected = false;
-                            index = i;
-                            break;
-                        }
-                    }
+            case 'cultural':        
+                if ($scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.variable) != -1) {
+                    object.isSelected = false;
+                    variable = $scope.searchModel.getCulturalTraits().selectedVariables[$scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.variable)];
+                    index = variable.selected.map(function(v) { return v.id; }).indexOf(object.id);
                     if (index > -1) {
-                        $scope.searchModel.getCulturalTraits().selected[object.variable].splice(index, 1);
-                        $scope.searchModel.getCulturalTraits().selected[object.variable].allSelected = false;
+                        variable.selected.splice(index, 1);
+                        variable.allSelected = false;
                         $scope.searchModel.getCulturalTraits().badgeValue--;
-                        $scope.$broadcast('variableCheck');
                     }
-                
                 }
             case 'variable':
                 while(object.length > 0) {
@@ -184,7 +184,6 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
 	
     var searchCompletedCallback = function() {
         $scope.enableSearchButton();
-        $scope.searchModel.results = searchModelService.getCodeIDs($scope.searchModel.results, $scope.searchModel.query);
         searchModelService.assignColors($scope.searchModel.results);
         $scope.searchModel.results.searched = true;
         $scope.switchToResults();
@@ -212,41 +211,40 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
     };
 
     $scope.search = function() {
-        var i, pruned;
+        var i;
         searchModel = searchModelService.getModel();
         searchParams = searchModel.params;    
         searchQuery = {};
         for (var propertyName in searchParams) {
-            //get selected cultural traits/codes
-            if (propertyName == 'culturalTraits') {
-                  searchParams[propertyName].selectedVariables.forEach(function(variable) {
-                        filters = []
-                        if (variable.data_type == 'Continuous') {
+            
+            //get selected cultural traits/codes or environmental codes
+           if (propertyName == 'culturalTraits' || propertyName == 'environmentalData') {
+               searchParams[propertyName].selectedVariables.forEach(function(variable) {
+                   filters = [];
+                    selectedVariable = (propertyName == 'culturalTraits') ? variable : variable.selectedVariable;
+                   if (variable.data_type == 'Continuous') {
+                       filters = [
+                        selectedVariable.id,
+                        selectedVariable.selectedFilter.operator,
+                        selectedVariable.vals
+                       ]
+                   } else {
+                        if (variable.selected.length > 0) {
                             filters = [
-                                variable.id,
-                                variable.selectedFilter.operator,
-                                variable.vals
-                            ];
+                                selectedVariable.id,
+                                'categorical',
+                                selectedVariable.selected.map(function(v) { return v.id; })
+                            ]
                             
-                        } else { 
-                            if (variable.selected.length>0) {
-                                filters = [
-                                    variable.id,
-                                    'categorical',
-                                    variable.selected
-                                ]
-                            } else filters = []
                         }
-                        if (filters.length > 0){
-                            if ('c' in searchQuery) {
-                                searchQuery['c'].push(filters);
-                            } else {
-                                searchQuery['c'] = [filters];
-                            }
-                        }
-                    
-                });
-            }
+                   }
+                   if (filters.length > 0) {
+                    if (propertyName.charAt(0) in searchQuery) searchQuery[propertyName.charAt(0)].push(filters);
+                    else searchQuery[propertyName.charAt(0)] = [filters]
+                   }
+               });
+                
+           }
             //get selected regions
             if (propertyName == 'geographicRegions') {
                 var selectedRegions = searchParams[propertyName].selectedRegions;  
@@ -263,38 +261,6 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     }
                 }
             }
-            //get selected environmental variable and search parameters
-            if (propertyName == 'environmentalData') {
-                searchParams[propertyName].selectedVariables.forEach(function(variable) {
-                    if (variable.selectedVariable) {
-                        filters = []
-                        if (variable.selectedVariable.data_type == 'Continuous') {
-                            filters = [
-                                variable.selectedVariable.id,
-                                variable.selectedFilter.operator,
-                                variable.vals
-                            ];
-                            
-                        } else { 
-                            if (variable.selectedVariable.selected.length>0) {
-                                filters = [
-                                    variable.selectedVariable.id,
-                                    'categorical',
-                                    variable.selectedVariable.selected
-                                ]
-                            } else filters = []
-                        }
-                        if (filters.length > 0){
-                            if ('e' in searchQuery) {
-                                searchQuery['e'].push(filters);
-                            } else {
-                                searchQuery['e'] = [filters];
-                            }
-                        }
-                    }
-                });
-            }
-            
             //get selected languages
             if (propertyName == 'languageClassifications') { 
                 var classifications = [];

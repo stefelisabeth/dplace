@@ -3,8 +3,8 @@
  * search UI state across controllers
  * @constructor
  */
-function SearchModelService(VariableCategory, GeographicRegion, EnvironmentalCategory, LanguageFamily, DatasetSources, Language, FindSocieties, colorMapService) {
-    this.model = new SearchModel(VariableCategory, GeographicRegion, EnvironmentalCategory, LanguageFamily, DatasetSources, Language);
+function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, DatasetSources, Language, FindSocieties, colorMapService) {
+    this.model = new SearchModel(VariableCategory, GeographicRegion, LanguageFamily, DatasetSources, Language);
     this.getModel = function() {
         return this.model;
     }
@@ -16,8 +16,23 @@ function SearchModelService(VariableCategory, GeographicRegion, EnvironmentalCat
         }
     }
     
+    var sortClassifications = function(results) { // do this for language search!
+        results.classifications = [];
+        results.societies.forEach(function(res) {
+            if (res.society.language) {
+                family = res.society.language.family;
+                if (results.classifications.map(function(c) { return c.id; }).indexOf(family.id) == -1) results.classifications.push(family);
+            }
+        });
+        results.classifications.sort(function(a,b) {
+            if (a.name < b.name) return -1;
+            else if (a.name > b.name) return 1;
+            else return 0;
+        });
+    }
+    
     this.getCodeIDs = function(results, query) {
-        results.code_ids = {};
+        /*results.code_ids = {};
         if (query.l && !query.c && !query.e) {
             results.classifications = [];
             added = [];
@@ -78,7 +93,9 @@ function SearchModelService(VariableCategory, GeographicRegion, EnvironmentalCat
                 }
             }
         }
-        return results;
+        return results;*/
+        console.log(results);
+        console.log(query);
     };
     
     var calculateRange = function(results) {
@@ -94,23 +111,38 @@ function SearchModelService(VariableCategory, GeographicRegion, EnvironmentalCat
                     }
                 }
             });
-            var min_value = null; var max_value = null;
-           extractedValues.forEach(function(val) {
-            if (!min_value) min_value = val;
-            if (!max_value) max_value = val;
             
-            if (val < min_value) min_value = val;
-            if (val > max_value) max_value = val;
-           });
-            var range = max_value - min_value;
-            results.environmental_variables[i]['range'] = range;
-            results.environmental_variables[i]['min'] = min_value.toFixed(4);
-            results.environmental_variables[i]['max'] = max_value.toFixed(4);
+            results.environmental_variables[i]['min'] = Math.min.apply(null, extractedValues);
+            results.environmental_variables[i]['max'] = Math.max.apply(null, extractedValues);
         }
+        
+        for (var i = 0; i < results.variable_descriptions.length; i++) {
+            if (results.variable_descriptions[i].variable.data_type != 'Continuous') continue;
+            extractedValues = societies.map(function(society) { 
+                for (var j = 0; j < society.variable_coded_values.length; j++) {
+                    if (society.variable_coded_values[j].variable == results.variable_descriptions[i].variable.id) {
+                        if (society.variable_coded_values[j].coded_value_float) return society.variable_coded_values[j].coded_value_float;
+                    }
+                }
+            });
+            
+            results.variable_descriptions[i]['min'] = Math.min.apply(null, extractedValues);
+            results.variable_descriptions[i]['max'] = Math.max.apply(null, extractedValues);
+        }
+        console.log(results);
         return results;
     }
     
     this.assignColors = function(results) {
+        query = this.getModel().query;
+        if (query.l && !query.c && !query.e) sortClassifications(results);
+        if (results.geographic_regions.length > 0) {
+            results.geographic_regions.sort(function(a,b) {
+                if (a.region_nam.toLowerCase() < b.region_nam.toLowerCase()) return -1;
+                else if (a.region_nam.toLowerCase() > b.region_nam.toLowerCase()) return 1;
+                else return 0;
+            })
+        }   
         results = calculateRange(results);
         var colorMap = colorMapService.generateColorMap(results);
         results.societies.forEach(function(container) {
@@ -118,9 +150,6 @@ function SearchModelService(VariableCategory, GeographicRegion, EnvironmentalCat
         });
         
     }
-    
-    
-    
 }
         
         
