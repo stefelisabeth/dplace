@@ -68,20 +68,6 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
 
     };
     
-    $scope.isEmpty = function(object, searchType) {
-        if (searchType == 'environmental') {
-            for (var i = 0; i < object.length; i++) {
-                if (object[i].selectedVariable) return false;
-            }
-        } 
-        else {
-            for (var key in object) {
-                if (object[key].length > 0)
-                    return false;
-            }
-        }
-        return true;
-    };
     $scope.searchCriteria = "View selected search criteria";
 
     $scope.showCriteria = function() {
@@ -105,7 +91,9 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                 if ($scope.searchModel.getCulturalTraits().selectedVariables[i].selected.length > 0) return true;
             }
         }
-        if (!$scope.isEmpty($scope.searchModel.getLanguageClassifications().selected)) return true;
+        for (var key in $scope.searchModel.getLanguageClassifications().selected) {
+            if ($scope.searchModel.getLanguageClassifications().selected[key].length > 0) return true;
+        }
         return false;
     }
     
@@ -164,7 +152,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     }
                 }
             case 'variable':
-                while(object.length > 0) {
+                while(object.length > 0) { //INFINTE LOOK CHCECK THIS
                     $scope.removeFromSearch(object[0], 'culture')
                 }
         }
@@ -184,8 +172,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
 	
     var searchCompletedCallback = function() {
         $scope.enableSearchButton();
-        searchModelService.assignColors($scope.searchModel.results);
-        $scope.searchModel.results.searched = true;
+        searchModelService.searchCompletedCallback();
         $scope.switchToResults();
     };
     
@@ -222,14 +209,14 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                searchParams[propertyName].selectedVariables.forEach(function(variable) {
                    filters = [];
                     selectedVariable = (propertyName == 'culturalTraits') ? variable : variable.selectedVariable;
-                   if (variable.data_type == 'Continuous') {
+                   if (selectedVariable.data_type.toLowerCase() == 'continuous') {
                        filters = [
                         selectedVariable.id,
                         selectedVariable.selectedFilter.operator,
                         selectedVariable.vals
                        ]
                    } else {
-                        if (variable.selected.length > 0) {
+                        if (selectedVariable.selected.length > 0) {
                             filters = [
                                 selectedVariable.id,
                                 'categorical',

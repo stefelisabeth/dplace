@@ -3,7 +3,8 @@
     
     <div class="row text-center" style="margin-top:20px">
         <div class="btn-group">
-            <button ng-repeat="button in buttons"
+            <button ng-repeat="button in treeButtons"
+                    ng-show="results.language_trees[button.value] || results.language_trees[button.value].length > 0"
                     type="button" class="btn btn-lg btn-default btn-dplace-search"
                     ng-model="results.selectedButton"
                     ng-click="buttonChanged(button.value)"
@@ -20,7 +21,7 @@
         class="form-control"
         style="width:100%"
         ng-change="treeSelected()"
-        ng-options="tree.source ? tree.source.name: tree.name for tree in trees| orderBy:'name'"
+        ng-options="tree.source ? tree.source.name: tree.name for tree in results.language_trees[results.selectedButton.value]| orderBy:'name'"
         ng-show="!globalTree"
         >
         <option value="">Select a Tree</option>
