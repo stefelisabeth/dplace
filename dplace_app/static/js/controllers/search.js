@@ -153,7 +153,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                 }
             case 'variable':
                 while(object.length > 0) { //INFINTE LOOK CHCECK THIS
-                    $scope.removeFromSearch(object[0], 'culture')
+                    $scope.removeFromSearch(object[0], 'cultural')
                 }
         }
         if (!$scope.checkIfSelected()) {
