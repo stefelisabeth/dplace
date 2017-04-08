@@ -203,7 +203,27 @@ def result_set_from_query_dict(query_dict):
 
     def id_array(l):
         return '(%s)' % ','.join('%s' % int(i) for i in l)
-    
+        
+    def join_values(varid, criteria):
+        alias = 'ev%s' % varid
+        sql_joins.append((
+            "value",
+            alias,
+            "{0}.society_id = s.id AND {0}.variable_id = {1}".format(alias, int(varid))))
+
+        for varid, operator, params in criteria:
+            if operator != 'categorical':
+                params = map(float, params)
+            if operator == 'inrange':
+                sql_where.append("{0}.coded_value_float >= {1:f} AND {0}.coded_value_float <= {2:f}".format(alias, params[0], params[1]))
+            elif operator == 'outrange':
+                sql_where.append("{0}.coded_value_float >= {1:f} OR {0}.coded_value_float <= {2:f}".format(alias, params[1], params[0]))
+            elif operator == 'gt':
+                sql_where.append("{0}.coded_value_float >= {1:f}".format(alias, params[0]))
+            elif operator == 'lt':
+                sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[0]))
+            elif operator == 'categorical':
+                sql_where.append("{0}.code_id IN %s".format(alias) % id_array(params))
 
     if 'l' in query_dict:
         sql_joins.append(('language', 'l', 'l.id = s.language_id'))
@@ -225,26 +245,7 @@ def result_set_from_query_dict(query_dict):
             sorted(query_dict['c'], key=lambda c: c[0]),
             key=lambda x: x[0]
         ):
-            alias = 'ev%s' % varid
-            sql_joins.append((
-                "value",
-                alias,
-                "{0}.society_id = s.id AND {0}.variable_id = {1}".format(alias, int(varid))))
-
-            for varid, operator, params in criteria:
-                if operator != 'categorical':
-                    params = map(float, params)
-                    
-                if operator == 'inrange':
-                    sql_where.append("{0}.coded_value_float >= {1:f} AND {0}.coded_value_float <= {2:f}".format(alias, params[0], params[1]))
-                elif operator == 'outrange':
-                    sql_where.append("{0}.coded_value_float >= {1:f} AND {0}.coded_value_float <= {2:f}".format(alias, params[1], params[0]))
-                elif operator == 'gt':
-                    sql_where.append("{0}.coded_value_float >= {1:f}".format(alias, params[0]))
-                elif operator == 'lt':
-                    sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[0]))
-                elif operator == 'categorical':
-                    sql_where.append("{0}.code_id IN %s".format(alias) % id_array(params))
+            join_values(varid, criteria)
 
         for variable in models.Variable.objects.filter(id__in=[x[0] for x in query_dict['c']]):
             result_set.variable_descriptions.add(serializers.VariableCode(variable.codes, variable))
@@ -255,25 +256,7 @@ def result_set_from_query_dict(query_dict):
             sorted(query_dict['e'], key=lambda c: c[0]),
             key=lambda x: x[0]
         ):
-            alias = 'ev%s' % varid
-            sql_joins.append((
-                "value",
-                alias,
-                "{0}.society_id = s.id AND {0}.variable_id = {1}".format(alias, int(varid))))
-
-            for varid, operator, params in criteria:
-                if operator != 'categorical':
-                    params = map(float, params)
-                if operator == 'inrange':
-                    sql_where.append("{0}.coded_value_float >= {1:f} AND {0}.coded_value_float <= {2:f}".format(alias, params[0], params[1]))
-                elif operator == 'outrange':
-                    sql_where.append("{0}.coded_value_float >= {1:f} AND {0}.coded_value_float <= {2:f}".format(alias, params[1], params[0]))
-                elif operator == 'gt':
-                    sql_where.append("{0}.coded_value_float >= {1:f}".format(alias, params[0]))
-                elif operator == 'lt':
-                    sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[0]))
-                elif operator == 'categorical':
-                    sql_where.append("{0}.code_id IN %s".format(alias) % id_array(params))
+            join_values(varid, criteria)
 
         for variable in models.Variable.objects.filter(id__in=[x[0] for x in query_dict['e']]):
             result_set.environmental_variables.add(variable)
