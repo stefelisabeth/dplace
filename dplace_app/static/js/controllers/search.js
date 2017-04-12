@@ -77,7 +77,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
         if (!$("#selected-criteria").hasClass('hidden')) $scope.searchCriteria = "Hide selected search criteria";
         else $scope.searchCriteria = "View selected search criteria";
     };
-    
+
     $scope.checkIfSelected = function() {
         if ($scope.searchModel.getGeographicRegions().selectedRegions.length > 0) return true;
         if ($scope.searchModel.getEnvironmentalData().selectedVariables.length > 0) {
@@ -152,9 +152,15 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     }
                 }
             case 'variable':
-                while(object.length > 0) { //INFINTE LOOK CHCECK THIS
-                    $scope.removeFromSearch(object[0], 'cultural')
-                }
+               index = $scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.id);
+               if (index > -1) {
+               if ($scope.searchModel.getCulturalTraits().selectedVariables[index].selected)
+                    codes_length = $scope.searchModel.getCulturalTraits().selectedVariables[index].selected.length;
+                else codes_length = 1;
+                $scope.searchModel.getCulturalTraits().selectedVariables.splice(index, 1);
+                $scope.searchModel.getCulturalTraits().badgeValue -= codes_length;
+               }
+               $scope.$broadcast('numVars');
         }
         if (!$scope.checkIfSelected()) {
             d3.select("#selected-criteria").classed("hidden", true);

@@ -1,6 +1,6 @@
 function CulturalCtrl($scope, searchModelService) {
     $scope.traits = [searchModelService.getModel().getCulturalTraits()];
-    
+
     //keeps track of number of variables selected
     $scope.numVars =  function() {
         $scope.numSelectedVars = 0;
@@ -10,6 +10,8 @@ function CulturalCtrl($scope, searchModelService) {
             });
         });    
     };
+    
+    $scope.$on('numVars', $scope.numVars);
 
     // wired to the search button.
     $scope.doSearch = function() {

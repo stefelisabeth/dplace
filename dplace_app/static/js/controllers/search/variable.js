@@ -38,14 +38,14 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, DatasetSo
     
     $scope.variableChanged = function(variable) {
         if (variable.selectedVariable != null) {
-            if (variable.selectedVariable.data_type == 'Continuous') {
+            if (variable.selectedVariable.data_type.toLowerCase() == 'continuous') {
                 $scope.values = MinAndMax.query({query: {id: variable.selectedVariable.id}});
                 variable.selectedVariable.selectedFilter = $scope.filters[0];
                 variable.VariableForm.$setPristine();
                 if ($scope.model.searchParams.selectedButton.value == 'cultural') {
                     if (variable.selectedVariables.map(function(v) { return v.id; }).indexOf(variable.selectedVariable.id) == -1) {
                         variable.selectedVariables.push(variable.selectedVariable);
-                        searchModelService.getModel().getCulturalTraits.badgeValue++;
+                        searchModelService.getModel().getCulturalTraits().badgeValue++;
                     }
                 } else {
                     searchModelService.getModel().getEnvironmentalData().badgeValue = $scope.variables.map(function(v) { return v.selectedVariable; }).length;
@@ -93,6 +93,7 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, DatasetSo
         }
         if (variable.selected.length == variable.codes.length) variable.allSelected = true;
         else variable.allSelected = false;
+        
         if ($scope.model.searchParams.selectedButton.value == 'cultural') $scope.numVars();
     };
     
