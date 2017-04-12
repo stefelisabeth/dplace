@@ -219,7 +219,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
             }
             var map_svg = map_svg.substring(0, map_svg.indexOf("</svg>"));
             // concat legend and remove all relative d-place links from svg's defs urls
-            map_svg = map_svg.concat(legend_svg.replace(/url\(.*?#/, 'url(#'));
+            map_svg = map_svg.concat(legend_svg.replace(/url\(.*?#/, 'url(#').replace('ng-attr-fill', 'fill'));
             map_svg = map_svg.concat(gradients_svg +"</svg>");
             var filename = $scope.results.chosenVariable.name.replace(/[\W]+/g, "-").toLowerCase()+"-map.svg";
         }

@@ -8,6 +8,18 @@ angular.module('dplaceFilters', [])
             }
         }
     })    
+    .filter('isEmpty', function() {
+        return function(object) {
+            for (var i = 0; i < object.length; i++) { 
+                if (object[i].selectedVariable) return true;
+            }
+            for (var key in object) {
+                if (object[key].length > 0) return true;
+            }
+            return false;
+        }
+    })
+    
     .filter('formatVariables', function() {
         return function(selected, selectedVariable) {
             return selected.filter(function(code) { return code.variable == selectedVariable ;});
