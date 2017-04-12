@@ -209,8 +209,12 @@ $(document).ready(function(){
                             {% for v in value %}
                             <tr>
                                 <td>{{v.name}}</td>
+                                {% if v.description %}
+                                <td>{{v.description}}</td>
+                                {% else %}
                                 <td>{{v.value}} {{v.units}}</td>
-                                {% if v.comment %}
+                                {% endif %}
+                            {% if v.comment %}
                             <td width="10px">
                                 <a class="comment-tooltip" data-toggle="tooltip" title="{{v.comment}}"><span class="glyphicon glyphicon-comment" aria-hidden="true"></span></a>
                                 </td>
