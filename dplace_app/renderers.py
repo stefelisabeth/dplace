@@ -1,7 +1,6 @@
 from rest_framework import renderers
 from clldutils.dsv import UnicodeWriter
 
-# TODO: add in 'How to cite' here
 CSV_PREAMBLE = """
 Research that uses data from D-PLACE should cite both the original source(s) of
 the data and the paper by Kirby et al. in which D-PLACE was first presented
