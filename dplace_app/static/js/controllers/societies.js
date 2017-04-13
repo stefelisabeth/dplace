@@ -322,16 +322,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
         d3.selectAll(".legends").each( function(){
             leg = d3.select(this);
             if (leg.attr("var-id") && leg.attr("class").indexOf("hide") == -1) {
-               if ($scope.globalTree) {
-                   if ($scope.results.chosenTVariable.var_id) {
-                       if (leg.attr("var-id") == $scope.results.chosenTVariable.var_id) 
-                        all_legends[leg.attr("var-id")] = leg;
-                    
-                   } else if (parseInt(leg.attr("var-id")) == $scope.results.chosenTVariable.id) {
-                       all_legends[leg.attr("var-id")] = leg;
-                   }
-               } else 
-                    all_legends[leg.attr("var-id")] = leg;
+                all_legends[leg.attr("var-id")] = leg;
             }
         });
                     
@@ -348,12 +339,11 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
         }
                 
         for (var i = 0; i < $scope.results.environmental_variables.length; i++) {
-            console.log($scope.results.environmental_variables[i]);
-            id = $scope.results.environmental_variables[i].var_id;
+            id = $scope.results.environmental_variables[i].id;
             name = ''
             if (!all_legends[id]) continue;
             legend_id = all_legends[id];
-            if ($scope.results.environmental_variables[i].CID) name += $scope.results.environmental_variables[i].CID;
+            if ($scope.results.environmental_variables[i].CID) name += $scope.results.environmental_variables[i].CID + '-';
             name += $scope.results.environmental_variables[i].name;
             svg_string = legend_id.node().innerHTML;
             svg_string = svg_string.replace(/url\(.*?#/, 'url(#');
