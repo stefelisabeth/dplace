@@ -35,6 +35,7 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
         if (results.societies.length == 0) return results;
         societies = results.societies;         
         for (var i = 0; i < results.environmental_variables.length; i++) {
+            results.environmental_variables[i].CID = "E"+(i+1);
             if (results.environmental_variables[i].data_type != 'Continuous') continue;
             extractedValues = societies.map(function(society) { 
                 for (var j = 0; j < society.environmental_values.length; j++) {
@@ -49,6 +50,7 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
         }
         
         for (var i = 0; i < results.variable_descriptions.length; i++) {
+            results.variable_descriptions[i].CID = "C"+(i+1);
             if (results.variable_descriptions[i].variable.data_type != 'Continuous') continue;
             extractedValues = societies.map(function(society) { 
                 for (var j = 0; j < society.variable_coded_values.length; j++) {

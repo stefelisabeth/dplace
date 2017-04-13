@@ -66,6 +66,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
     var searchCompletedCallback = function() {
         searchModelService.searchCompletedCallback();
         $scope.results = $scope.searchModel.results;
+        $scope.query = searchModelService.getModel().getQuery();
         assignGradient();
         concatenateVariables();
     };
@@ -347,11 +348,12 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
         }
                 
         for (var i = 0; i < $scope.results.environmental_variables.length; i++) {
+            console.log($scope.results.environmental_variables[i]);
             id = $scope.results.environmental_variables[i].var_id;
             name = ''
             if (!all_legends[id]) continue;
             legend_id = all_legends[id];
-            if ($scope.results.environmental_variables[i].CID) name += $scope.results.environmenal_variables[i].CID;
+            if ($scope.results.environmental_variables[i].CID) name += $scope.results.environmental_variables[i].CID;
             name += $scope.results.environmental_variables[i].name;
             svg_string = legend_id.node().innerHTML;
             svg_string = svg_string.replace(/url\(.*?#/, 'url(#');
