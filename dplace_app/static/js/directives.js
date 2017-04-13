@@ -173,7 +173,7 @@ angular.module('languagePhylogenyDirective', [])
                 $.get("/static/images/D-PLACE_VLogo_RGB.svg", function(data) {
                     var svg_data = data.childNodes;
                     d3.select(".phylogeny").append("svg:g")
-                        .attr("transform", "scale(0.5) translate(500,0)")
+                        .attr("transform", "scale(0.25) translate(10,0)")
                         .attr("style", "opacity: 0.35;")
                         .attr("id", "tree-logo");
                     document.getElementById("tree-logo").innerHTML = svg_data[1].innerHTML;

@@ -6,11 +6,11 @@
     "report-coverage": "codecov"
   },
   "devDependencies": {
-    "codecov": "^2.0.2",
+    "codecov": "^2.1.0",
     "istanbul": "^0.4.5",
     "jasmine-core": "^2.5.2",
     "jasmine-node": "^1.14.5",
-    "karma": "^1.5.0",
+    "karma": "^1.6.0",
     "karma-coverage": "^1.1.1",
     "karma-jasmine": "^1.1.0",
     "karma-phantomjs-launcher": "^1.0.4",

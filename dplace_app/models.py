@@ -45,14 +45,16 @@ class Society(models.Model):
         """Returns environmental data for the given society"""
         valueDict = defaultdict(list)
         for value in self.value_set\
-                .select_related('variable').order_by('variable__name').all():
+                .select_related('code').\
+                select_related('variable').order_by('variable__name').all():
             if value.variable.type == 'environmental':
                 categories = value.variable.index_categories.all()
                 valueDict[str(categories[0])].append({
                     'name': value.variable.name,
                     'value': '{0}'.format(value),
+                    'description': value.get_description(),
                     'units': value.variable.units,
-                    'comment': value.comment
+                    'comment': value.comment,
                 })
         return valueDict
 
