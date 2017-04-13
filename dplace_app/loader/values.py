@@ -36,10 +36,10 @@ def load_data(repos):
     pk = 0
     for ds in repos.datasets:
         for item in ds.data:
-            if item.soc_id not in societies:
+            if item.soc_id not in societies:  # pragma: no cover
                 logging.warn('value for unknown society {0}'.format(item.soc_id))
                 continue
-            if item.var_id not in variables:
+            if item.var_id not in variables:   # pragma: no cover
                 logging.warn('value for unknown variable {0}'.format(item.var_id))
                 continue
             v, _refs = _load_data(
