@@ -239,7 +239,9 @@ class Value(models.Model):
             ['society', 'coded_value', 'focal_year', 'subcase'],
             ['society', 'code', 'focal_year'],
         ]
-        unique_together = ('variable', 'society', 'coded_value', 'comment', 'subcase', 'focal_year')
+        unique_together = (
+            'variable', 'society', 'coded_value', 'comment', 'subcase', 'focal_year'
+        )
 
 
 class Source(models.Model):
@@ -295,7 +297,7 @@ class GeographicRegion(models.Model):
     level_2_re = models.FloatField()
     count = models.FloatField()
     region_nam = models.CharField(max_length=254, db_index=True)
-    continent = models.CharField(max_length=254,  db_index=True)
+    continent = models.CharField(max_length=254, db_index=True)
     tdwg_code = models.IntegerField()
 
     def __unicode__(self):
