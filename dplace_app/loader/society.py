@@ -14,12 +14,12 @@ def society_locations(repos):
     count = 0
     for soc_id, spec in repos.read_json('geo', 'societies_tdwg.json').items():
         society = societies.get(soc_id)
-        if not society:
+        if not society:  # pragma: no cover
             logging.warn("No matching society found for %s" % soc_id)
             continue
 
         region = regions.get(spec['name'])
-        if not region:
+        if not region:  # pragma: no cover
             logging.warn("No matching region found for %s" % spec['name'])
         else:
             society.region = region
@@ -52,11 +52,11 @@ def load_societies(repos):
             lat, lon, olat, olon = None, None, None, None
             try:
                 lat, lon = map(float, [item.Lat, item.Long])
-            except (TypeError, ValueError):
+            except (TypeError, ValueError):  # pragma: no cover
                 logging.warn("Unable to create coordinates for %s" % item)
             try:
                 olat, olon = map(float, [item.origLat, item.origLong])
-            except (TypeError, ValueError):
+            except (TypeError, ValueError):  # pragma: no cover
                 logging.warn("Unable to create original coordinates for %s" % item)
 
             societies.append(Society(
