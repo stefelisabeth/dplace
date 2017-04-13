@@ -101,6 +101,7 @@ class DPLACECSVResults(object):
                 else society['original_location']['coordinates'][0]
             row['Original latitude'] = "" if society['original_location'] is None \
                 else society['original_location']['coordinates'][1]
+            
             if society['language'] is not None and 'name' in society['language']:
                 row['ISO code'] = society['language']['iso_code']
                 row['Glottolog language/dialect name'] = society['language']['name']
@@ -108,7 +109,7 @@ class DPLACECSVResults(object):
                 if 'family' in society['language'] \
                     and 'name' in society['language']['family']:
                         row['Language family'] = society['language']['family']['name']
-            else:
+            else:  # pragma: no cover
                 row['Glottolog language/dialect name'] = ""
                 row['Glottolog language/dialect id'] = ""
                 row['Language family'] = ""
@@ -126,12 +127,8 @@ class DPLACECSVResults(object):
                 field_names = self.field_map['variable_descriptions'][variable_id]
                 if field_names['code'] in row:
                     if 'code_description' in cultural_trait_value:
-                        try:
-                            description = \
-                                cultural_trait_value['code_description']['description']
-                        except:
-                            description = ""
-                    else:
+                        description = cultural_trait_value['code_description'].get('description', '')
+                    else:  # pragma: no cover
                         description = ""
                     extra_rows.append(dict({
                         'Preferred society name': society['name'],
@@ -169,19 +166,20 @@ class DPLACECSVResults(object):
 
                 row[field_names['code']] = cultural_trait_value['coded_value']
                 row[field_names['focal_year']] = cultural_trait_value['focal_year']
+                
                 if 'code_description' in cultural_trait_value:
                     try:
                         row[field_names['description']] = \
                             cultural_trait_value['code_description']['description']
-                    except:
+                    except:  # pragma: no cover
                         row[field_names['description']] = ''
-                row[field_names['comments']] = \
-                    cultural_trait_value['comment']
-                row [field_names['subcase']] = \
-                    cultural_trait_value['subcase']
+                
+                row[field_names['comments']] = cultural_trait_value['comment']
+                row [field_names['subcase']] = cultural_trait_value['subcase']
                 row[field_names['sources']] = ''.join([
                     x['author'] + '(' + x['year'] + '); '
-                    for x in cultural_trait_value['references']])
+                    for x in cultural_trait_value['references']
+                ])
             # environmental
             environmental_values = item['environmental_values']
             for environmental_value in environmental_values:
