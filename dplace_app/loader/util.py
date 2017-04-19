@@ -2,7 +2,12 @@
 from __future__ import unicode_literals
 import logging
 
-from dplace_app.models import GeographicRegion
+from dplace_app.models import GeographicRegion, Source
+
+def as_source(obj):
+    return Source.objects.create(
+        **{k: getattr(obj, k) for k in 'year author name reference'.split()}
+    )
 
 
 def configure_logging(test=False):

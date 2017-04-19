@@ -4,6 +4,7 @@ import logging
 
 from clldutils.text import split_text
 from dplace_app.models import Source
+from dplace_app.loader.util import as_source
 
 _SOURCE_CACHE = {}
 
@@ -14,7 +15,7 @@ def get_source(ds):
         try:
             o = Source.objects.get(year=ds.year, author=ds.author)
         except Source.DoesNotExist:
-            o = ds.as_source()
+            o = as_source(ds)
             o.save()
         _SOURCE_CACHE[ds.id] = o
     return _SOURCE_CACHE[dsid]

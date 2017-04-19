@@ -6,6 +6,7 @@ from ete3 import Tree
 from dplace_app.models import (
     Society, LanguageTree, LanguageTreeLabels, LanguageTreeLabelsSequence,
 )
+from dplace_app.loader.util import as_source
 
 
 def load_phylogenies(repos):
@@ -23,7 +24,7 @@ def _load(obj, sources, sequences):
     tree = LanguageTree.objects.create(name=obj.id)
     source = sources.get((obj.author, obj.year))
     if not source:
-        sources[(obj.author, obj.year)] = source = obj.as_source()
+        sources[(obj.author, obj.year)] = source = as_source(obj)
         source.save()
     tree.source = source
 
