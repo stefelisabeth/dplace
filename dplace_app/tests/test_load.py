@@ -4,10 +4,11 @@ from unittest import TestCase
 
 import attr
 
+from pydplace.api import Variable
+
 
 class Tests(TestCase):
     def test_Variable(self):
-        from dplace_app.load import Variable
 
         def kwargs(**kw):
             for field in attr.fields(Variable):
