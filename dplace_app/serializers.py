@@ -15,6 +15,14 @@ class SourceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ReferenceSerializer(serializers.ModelSerializer):
+    source = SourceSerializer()
+
+    class Meta(object):
+        model = models.Reference
+        fields = ['source', 'pages']
+
+
 class CodeDescriptionSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = models.CodeDescription
@@ -64,7 +72,7 @@ class CategoryDetailSerializer(serializers.ModelSerializer):
 
 class ValueSerializer(serializers.ModelSerializer):
     code_description = CodeDescriptionSerializer(source='code')
-    references = SourceSerializer(many=True)
+    references = ReferenceSerializer(many=True)
 
     class Meta(object):
         model = models.Value

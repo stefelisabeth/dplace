@@ -81,12 +81,9 @@ class Society(models.Model):
 
     def get_data_references(self):
         """Returns the references for the cultural trait data"""
-        refs = []
-        qset = self.value_set
-        for value in qset.all():
-            for r in value.references.all():
-                if r not in refs:
-                    refs.append(r)
+        refs = set()
+        for value in self.value_set.all():
+            refs = refs.union(r.source for r in value.references.all())
         return sorted(refs, key=lambda r: r.key)
 
     def __unicode__(self):
@@ -217,7 +214,6 @@ class Value(models.Model):
     code = models.ForeignKey('CodeDescription', db_index=True, null=True)
     source = models.ForeignKey('Source', null=True)
     comment = models.TextField(default="")
-    references = models.ManyToManyField('Source', related_name="references")
     subcase = models.TextField(default="")
     focal_year = models.CharField(max_length=10, default="")
 
@@ -257,7 +253,13 @@ class Source(models.Model):
 
     class Meta(object):
         ordering = ('name', )
-        
+
+
+class Reference(models.Model):
+    source = models.ForeignKey(Source, related_name="references")
+    value = models.ForeignKey(Value, related_name="references")
+    pages = models.CharField(max_length=100, default='')
+
 
 class LanguageFamily(models.Model):
     name = models.CharField(max_length=50, db_index=True)

@@ -47,14 +47,14 @@ def load_data(repos):
             if v:
                 pk += 1
                 objs.append(Value(**v))
-                refs.extend([(pk, sid) for sid in _refs or []])
+                refs.extend([(pk, sid, pages) for sid, pages in _refs or []])
 
     Value.objects.bulk_create(objs, batch_size=1000)
 
     with connection.cursor() as c:
         c.executemany(
             """\
-INSERT INTO dplace_app_value_references (value_id, source_id) VALUES (%s, %s)""", refs)
+INSERT INTO dplace_app_reference (value_id, source_id, pages) VALUES (%s, %s, %s)""", refs)
     return Value.objects.count()
 
 
@@ -70,4 +70,4 @@ def _load_data(ds, val, source, society, variable, sources=None, descriptions=No
         code=descriptions.get((variable.id, val.code)),
         focal_year=val.year,
         subcase=val.sub_case)
-    return v, set(sources[r.key].id for r in val.references if r.key in sources)
+    return v, set((sources[r.key].id, r.pages) for r in val.references if r.key in sources)
