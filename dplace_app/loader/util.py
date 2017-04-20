@@ -27,9 +27,8 @@ def get_source(ds):
 
 def load_references(repos):
     for src in repos.sources.iterentries():
-        name = '{0} ({2})'.format(*src.fields['key'].partition(', ')) \
-            if ', ' in src.fields['key'] else src.fields['key']
-        Source.objects.create(key=src.key, name=name, reference=src.text())
+        Source.objects.bulk_create([
+            Source(key=src.key, name=src.fields['key'], reference=src.text())])
     return 1
 
 
