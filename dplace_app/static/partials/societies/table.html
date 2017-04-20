@@ -30,8 +30,8 @@
                     <span class="glyphicon glyphicon-comment" aria-hidden="true"></span></a>
                 <div id="s{{society_result.society.ext_id}}{{variable.variable.label}}" class="collapse val-sources">
                     • <span ng-repeat="cv in coded_value.references" ><a
-                    popover="{{cv.source.reference}}" popover-placement="left"
-                    popover-title="{{cv.source.name}}">{{cv.source.name}} {{cv.pages}}</a> • </span>
+                    popover="{{results.sources[cv.source].reference}}" popover-placement="left"
+                    popover-title="{{results.sources[cv.source].name}}">{{results.sources[cv.source].name}} {{cv.pages}}</a> • </span>
                 </div>
                 <div ng-show="(society_result.variable_coded_values|numValues:variable.variable.id ) > 0" style="font-size:12px;"> {{ society_result.variable_coded_values|numValues:variable.variable.id }} more values for this society</div>
 

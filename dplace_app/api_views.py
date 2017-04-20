@@ -305,10 +305,15 @@ def result_set_from_query_dict(query_dict):
         if result_set.variable_descriptions:
             for cval in soc.selected_cvalues:
                 soc_result.variable_coded_values.add(cval)
+                result_set.sources = result_set.sources.union(
+                    r.source_id for r in cval.references.all())
         if result_set.environmental_variables:
             for eval in soc.selected_evalues:
                 soc_result.environmental_values.add(eval)
+                result_set.sources = result_set.sources.union(
+                    r.source_id for r in eval.references.all())
         result_set.societies.add(soc_result)
+    result_set.sources = models.Source.objects.filter(id__in=result_set.sources).all()
 
     log.info('mid 1: %s' % (time() - _s,))
 

@@ -16,11 +16,9 @@ class SourceSerializer(serializers.ModelSerializer):
 
 
 class ReferenceSerializer(serializers.ModelSerializer):
-    source = SourceSerializer()
-
     class Meta(object):
         model = models.Reference
-        fields = ['source', 'pages']
+        fields = '__all__'
 
 
 class CodeDescriptionSerializer(serializers.ModelSerializer):
@@ -222,6 +220,7 @@ class SocietyResultSet(object):
         self.variable_descriptions = set()
         self.environmental_variables = set()
         self.languages = set()
+        self.sources = set()
         self.geographic_regions = set()
         self.language_trees = set()
 
@@ -247,6 +246,7 @@ class SocietyResultSetSerializer(serializers.Serializer):
     variable_descriptions = VariableCodeSerializer(many=True)
     # environmental variables -> environmental values
     environmental_variables = VariableSerializer(many=True)
+    sources = SourceSerializer(many=True)
     # languages - Does not map to a more specific value
     languages = LanguageSerializer(many=True)
     # Geographic Regions - does not map to a more specific value
