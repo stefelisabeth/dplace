@@ -11,12 +11,11 @@ from django.db import transaction
 from clldutils.path import Path
 
 from pydplace.api import Repos
-from loader.util import configure_logging, load_regions
+from loader.util import configure_logging, load_regions, load_references
 from loader.society import society_locations, load_societies, load_society_relations
 from loader.phylogenies import load_phylogenies
 from loader.variables import load_vars
 from loader.values import load_data
-from loader.sources import load_references
 from loader.glottocode import load_languages
 
 

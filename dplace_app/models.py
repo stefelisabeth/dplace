@@ -87,7 +87,7 @@ class Society(models.Model):
             for r in value.references.all():
                 if r not in refs:
                     refs.append(r)
-        return sorted(refs, key=lambda r: r.author)
+        return sorted(refs, key=lambda r: r.key)
 
     def __unicode__(self):
         return "%s - %s" % (self.ext_id, self.name)
@@ -248,21 +248,14 @@ class Source(models.Model):
     """
     Stores references for Value, also for dataset sources.
     """
-    # Not really sure if we should separate dataset sources from references (I
-    # think we should), but since all the code has already been written with
-    # this model, I won't change it yet.
-
-    # text, because might be '1996', '1999-2001', or 'ND'
-    year = models.CharField(max_length=30, db_index=True)
-    author = models.TextField(db_index=True)
+    key = models.CharField(max_length=50, db_index=True, null=False, unique=True)
     reference = models.TextField()
     name = models.CharField(max_length=100, db_index=True, default="")
 
     def __unicode__(self):
-        return "%s (%s)" % (self.author, self.year)
+        return self.name
 
     class Meta(object):
-        unique_together = ('year', 'author')
         ordering = ('name', )
         
 

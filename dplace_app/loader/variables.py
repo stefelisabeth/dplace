@@ -2,7 +2,7 @@
 import logging
 
 from dplace_app.models import Variable, Category, CodeDescription
-from sources import get_source
+from dplace_app.loader.util import get_source
 
 
 def load_vars(repos):

@@ -11,7 +11,7 @@ from dplace_app.models import Language, LanguageFamily, Source, Category, Variab
 from dplace_app.models import Society, GeographicRegion, CodeDescription
 
 from dplace_app.load import load
-from dplace_app.loader import sources
+from dplace_app.loader import util
 
 
 class Test(APITestCase):
@@ -36,7 +36,7 @@ class Test(APITestCase):
         return getattr(obj, 'id', obj) in [x['id'] for x in response['results']]
 
     def setUp(self):
-        sources._SOURCE_CACHE = {}
+        util._SOURCE_CACHE = {}
         load(Path(__file__).parent.joinpath('data'))
 
     def test_society_detail(self):

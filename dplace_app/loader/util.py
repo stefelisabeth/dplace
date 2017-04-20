@@ -2,12 +2,35 @@
 from __future__ import unicode_literals
 import logging
 
+from clldutils.misc import slug
 from dplace_app.models import GeographicRegion, Source
+
+_SOURCE_CACHE = {}
+
 
 def as_source(obj):
     return Source.objects.create(
-        **{k: getattr(obj, k) for k in 'year author name reference'.split()}
-    )
+        key=slug(obj.name), **{k: getattr(obj, k) for k in 'name reference'.split()})
+
+
+def get_source(ds):
+    dsid = getattr(ds, 'id', ds)
+    if dsid not in _SOURCE_CACHE:
+        try:
+            o = Source.objects.get(name=ds.name)
+        except Source.DoesNotExist:
+            o = as_source(ds)
+            o.save()
+        _SOURCE_CACHE[ds.id] = o
+    return _SOURCE_CACHE[dsid]
+
+
+def load_references(repos):
+    for src in repos.sources.iterentries():
+        name = '{0} ({2})'.format(*src.fields['key'].partition(', ')) \
+            if ', ' in src.fields['key'] else src.fields['key']
+        Source.objects.create(key=src.key, name=name, reference=src.text())
+    return 1
 
 
 def configure_logging(test=False):

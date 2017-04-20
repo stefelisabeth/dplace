@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 import logging
 
 from dplace_app.models import Society, GeographicRegion, SocietyRelation
-
-from sources import get_source
+from dplace_app.loader.util import get_source
 
 
 def society_locations(repos):

@@ -29,9 +29,9 @@
                 <a ng-show="coded_value.comment.length > 0 || coded_value.subcase.length > 0 || (coded_value.focal_year.length > 0 && coded_value.focal_year != 'NA')" class="comment-tooltip" tooltip = "{{ coded_value|formatComment }}">
                     <span class="glyphicon glyphicon-comment" aria-hidden="true"></span></a>
                 <div id="s{{society_result.society.ext_id}}{{variable.variable.label}}" class="collapse val-sources">
-                    • <span ng-repeat="cv in coded_value.references|orderBy:['author','year']" ><a
+                    • <span ng-repeat="cv in coded_value.references|orderBy:['name']" ><a
                     popover="{{cv.reference}}" popover-placement="left"
-                    popover-title="{{cv.author}} ({{cv.year}})">{{cv.author}} ({{cv.year}})</a> • </span>
+                    popover-title="{{cv.name}}">{{cv.name}}</a> • </span>
                 </div>
                 <div ng-show="(society_result.variable_coded_values|numValues:variable.variable.id ) > 0" style="font-size:12px;"> {{ society_result.variable_coded_values|numValues:variable.variable.id }} more values for this society</div>
 

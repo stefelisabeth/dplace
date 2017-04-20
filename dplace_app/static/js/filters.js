@@ -119,7 +119,7 @@ angular.module('dplaceFilters', [])
         return function(value) {
             if (!value) return '';
             return value.references.map(function(reference) {
-                return reference.author + ' (' + reference.year + ')';
+                return reference.name;
             }).join('; ');
         };
     })
