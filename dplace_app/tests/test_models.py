@@ -92,3 +92,4 @@ class EATestCase(TestCase):
             glotto_code='xxxx1234'
         )
         assert L.get_absolute_url().endswith(L.glotto_code)
+

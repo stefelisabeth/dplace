@@ -24,7 +24,7 @@ def view_language(request, glottocode):
 
 
 def download_file(request):
-    if request.method =='POST':
+    if request.method == 'POST':
         s = StringIO()
         zf = zipfile.ZipFile(s, "w")
         try:
@@ -54,7 +54,7 @@ def download_file(request):
         
     filename = "dplace-trees-%s.zip" % datetime.datetime.now().strftime("%Y-%m-%d")
     response = HttpResponse(s.getvalue(), content_type="application/zip")
-    response['Content-Disposition'] = 'attachment; filename='+filename
+    response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
     return response
 
 

@@ -7,7 +7,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from clldutils.path import Path
 
-from dplace_app.models import *
+from dplace_app.models import Language, LanguageFamily, Source, Category, Variable
+from dplace_app.models import Society, GeographicRegion, CodeDescription
+
 from dplace_app.load import load
 from dplace_app.loader import sources
 
@@ -59,7 +61,9 @@ class Test(APITestCase):
         self.assertIsInstance(response, list)
         response = self.get_json(
             'get_categories',
-            {'query': json.dumps(dict(source=Source.objects.get(name='Ethnographic Atlas').id))})
+            {'query': json.dumps(dict(
+                source=Source.objects.get(name='Ethnographic Atlas').id
+            ))})
         self.assertIsInstance(response, list)
 
     def test_min_and_max(self):
@@ -333,7 +337,9 @@ class Test(APITestCase):
         """
         This uses a region that contains a single polygon around society 2
         """
-        response = self.get_results(p=[GeographicRegion.objects.get(region_nam='Region2').id])
+        response = self.get_results(
+            p=[GeographicRegion.objects.get(region_nam='Region2').id]
+        )
         self.assertFalse(
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
         self.assertTrue(
