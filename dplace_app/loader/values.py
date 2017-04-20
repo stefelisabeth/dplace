@@ -5,7 +5,7 @@ import re
 from django.db import connection
 
 from dplace_app.models import Society, Source, Value, Variable, CodeDescription
-from sources import get_source
+from dplace_app.loader.util import get_source
 
 
 BINFORD_REF_PATTERN = re.compile('(?P<author>[^0-9]+)(?P<year>[0-9]{4}a-z?):')
@@ -15,7 +15,7 @@ def load_data(repos):
     refs = []
     societies = {s.ext_id: s for s in Society.objects.all()}
     kw = dict(
-        sources={(s.author, s.year): s for s in Source.objects.all()},
+        sources={s.key: s for s in Source.objects.all()},
         descriptions={(vcd.variable_id, vcd.code): vcd
                       for vcd in CodeDescription.objects.all()})
 
@@ -47,14 +47,14 @@ def load_data(repos):
             if v:
                 pk += 1
                 objs.append(Value(**v))
-                refs.extend([(pk, sid) for sid in _refs or []])
+                refs.extend([(pk, sid, pages) for sid, pages in _refs or []])
 
     Value.objects.bulk_create(objs, batch_size=1000)
 
     with connection.cursor() as c:
         c.executemany(
             """\
-INSERT INTO dplace_app_value_references (value_id, source_id) VALUES (%s, %s)""", refs)
+INSERT INTO dplace_app_reference (value_id, source_id, pages) VALUES (%s, %s, %s)""", refs)
     return Value.objects.count()
 
 
@@ -70,27 +70,4 @@ def _load_data(ds, val, source, society, variable, sources=None, descriptions=No
         code=descriptions.get((variable.id, val.code)),
         focal_year=val.year,
         subcase=val.sub_case)
-
-    refs = set()
-    if ds.type == 'cultural':
-        for r in val.references:
-            author, year = None, None
-            m = BINFORD_REF_PATTERN.match(r)
-            if m:
-                author, year = m.group('author').strip(), m.group('year')
-                if author.endswith(','):
-                    author = author[:-1].strip()
-            else:
-                ref_short = r.split(",")
-                if len(ref_short) == 2:
-                    author = ref_short[0].strip()
-                    year = ref_short[1].strip().split(':')[0]
-            if author and year:
-                ref = sources.get((author, year))
-                if ref:
-                    refs.add(ref.id)
-                else:  # pragma: no cover
-                    logging.warn(
-                        "Could not find reference %s, %s in database, skipping reference"
-                        % (author, year))
-    return v, refs
+    return v, set((sources[r.key].id, r.pages) for r in val.references if r.key in sources)
