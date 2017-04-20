@@ -70,21 +70,10 @@ class Test(APITestCase):
         response = self.get_json(
             'min_and_max',
             {'query': json.dumps(
-                dict(environmental_id=Variable.objects.get(name='Rainfall').id))})
+                dict(id=Variable.objects.get(name='Rainfall').id))})
+        self.assertIsInstance(response, dict)
         self.assertIn('min', response)
         self.assertIn('max', response)
-
-    def test_cont_variable(self):
-        response = self.client.get('cont_variable')
-        self.assertEqual(response.status_code, 404)
-        response = self.client.get('cont_variable', {'query': 'not-json-parseable'})
-        self.assertEqual(response.status_code, 404)
-        response = self.client.get('cont_variable', {'query': '[]'})
-        self.assertEqual(response.status_code, 404)
-        response = self.get_json(
-            'cont_variable',
-            {'query': json.dumps(dict(bf_id=Variable.objects.get(label='2').id))})
-        self.assertIsInstance(response, list)
 
     def test_geo_api(self):
         response = self.client.get(reverse('geographicregion-list'), format='json')
@@ -179,10 +168,13 @@ class Test(APITestCase):
         response = self.client.get(reverse('csv_download'))
         self.assertEqual(response.content.split()[0], '"Research')
         response = self.get_json(
-            'csv_download',
-            {'query': json.dumps({'c': ['%s-%s' % (
+            'csv_download', 
+            {'query': json.dumps({'c': [[
                 CodeDescription.objects.get(code='1').variable.id,
-                CodeDescription.objects.get(code='1').id)]})})
+                'categorical',
+                [CodeDescription.objects.get(code='1').id]
+            ]]})}
+        )
         self.assertIn('Herero', response.decode('utf8'))
 
     def test_trees_from_societies(self):
@@ -204,10 +196,7 @@ class Test(APITestCase):
                     if no_escape:
                         _data.append((k, vv))
                     else:
-                        if str(k) == 'c':
-                            _data.append((k, vv))
-                        else:
-                            _data.append((k, json.dumps(vv)))
+                        _data.append((k, json.dumps(vv)))
             data = _data
         return method(reverse(urlname), data, format='json')
 
@@ -221,19 +210,15 @@ class Test(APITestCase):
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
 
     def test_find_society_by_var(self):
-        response = self.get_results(c=['%s-%s' % (
-            CodeDescription.objects.get(code='1').variable.id,
-            CodeDescription.objects.get(code='1').id)])
+        response = self.get_results(
+            c=[[CodeDescription.objects.get(code='1').variable.id,'categorical',[CodeDescription.objects.get(code='1').id]]])
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
         self.assertFalse(
             self.society_in_results(Society.objects.get(ext_id='society2'), response))
 
     def test_find_societies_by_var(self):
-        serialized_codes = [
-            '%s-%s' % (CodeDescription.objects.get(code=i).variable.id,
-                       CodeDescription.objects.get(code=i).id) for i in ['1', '4']
-        ]
+        serialized_codes = [[CodeDescription.objects.get(code='1').variable.id,'categorical',[CodeDescription.objects.get(code=i).id for i in ['1', '4']]]]
         response = self.get_results(c=serialized_codes)
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
@@ -247,18 +232,44 @@ class Test(APITestCase):
         self.assertFalse(
             self.society_in_results(Society.objects.get(ext_id='society2'), response))
 
-    def test_find_society_by_continuous_var(self):
-        response = self.get_results(c=['%s-%s-%s' % (
-            Variable.objects.get(label='2').id, 0.0, 100)])
+    def test_find_society_by_continuous_var_inrange(self):
+        response = self.get_results(c=[[
+            Variable.objects.get(label='2').id,
+            'inrange',
+            ['0.0', '100']
+        ]])
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
         self.assertFalse(
             self.society_in_results(Society.objects.get(ext_id='society2'), response))
-
+            
+    def test_find_society_by_continuous_var_gt(self):
+        response = self.get_results(
+            c=[[Variable.objects.get(label='2').id, 'gt', ['60']]])
+        self.assertTrue(
+            self.society_in_results(Society.objects.get(ext_id='society2'), response))
+        self.assertFalse(
+            self.society_in_results(Society.objects.get(ext_id='society1'), response))
+    
+    def test_find_society_by_continuous_var_lt(self):
+        response = self.get_results(
+            c=[[Variable.objects.get(label='2').id, 'lt', ['60']]])
+        self.assertTrue(
+            self.society_in_results(Society.objects.get(ext_id='society1'), response))
+        self.assertFalse(
+            self.society_in_results(Society.objects.get(ext_id='society2'), response))
+    
+    def test_find_society_by_continuous_var_outrange(self):
+        response = self.get_results(
+            c=[[Variable.objects.get(label='2').id, 'outrange', ['50', '200']]])
+        self.assertTrue(
+            self.society_in_results(Society.objects.get(ext_id='society2'), response))
+        self.assertFalse(
+            self.society_in_results(Society.objects.get(ext_id='society1'), response))
+            
     def test_find_no_societies(self):
         response = self.get_results(
-            c=['%s-%s' % (CodeDescription.objects.get(code='1').variable.id,
-                          CodeDescription.objects.get(code='9').id)])
+            c=[[CodeDescription.objects.get(code='1').variable.id, 'categorical', [CodeDescription.objects.get(code='9').id]]])
         self.assertEqual(len(response.data['societies']), 0)
 
     def test_find_society_by_language_and_var(self):
@@ -267,9 +278,11 @@ class Test(APITestCase):
         # this should return only 1 and not 2 or 3
         # This tests that results should be intersection (AND), not union (OR)
         # Society 3 is not coded for any variables, so it should not appear in the list.
-        serialized_vcs = ['%s-%s' % (
-            CodeDescription.objects.get(code=i).variable.id,
-            CodeDescription.objects.get(code=i).id) for i in ['1', '4']]
+        serialized_vcs = [[
+            CodeDescription.objects.get(code='1').variable.id,
+            'categorical',
+            [CodeDescription.objects.get(code=i).id for i in ['1', '4']]
+        ]]
         serialized_lcs = [
             Language.objects.get(glotto_code=i).id for i in ['aaaa1234', 'cccc1234']]
         response = self.get_results(c=serialized_vcs, l=serialized_lcs)

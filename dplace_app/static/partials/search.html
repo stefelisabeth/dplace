@@ -46,7 +46,7 @@
                             <a ng-click="removeFromSearch(region, 'geographic')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ region.name }}
                         </li>
                     </ul>
-                    <h5 data-toggle="collapse" data-target="#scLanguage" ng-show="!isEmpty(searchModel.params.languageClassifications.selected, 'language')" style="cursor:pointer;"><strong>Language</strong></h5>
+                    <h5 data-toggle="collapse" data-target="#scLanguage" ng-show="searchModel.params.languageClassifications.selected | isEmpty" style="cursor:pointer;"><strong>Language</strong></h5>
                         <ul id="scLanguage" class="list-unstyled collapse in" style="padding-left:10px;">
                         <li ng-repeat="(family, languages) in searchModel.params.languageClassifications.selected" ng-show="languages.length > 0">
                             <a ng-click="removeFromSearch(family, 'family')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ family }}
@@ -57,18 +57,18 @@
                             </ul>
                         </li>
                         </ul>
-                    <h5 data-toggle="collapse" data-target="#scCulture" ng-show="!isEmpty(searchModel.params.culturalTraits.selected, 'cultural')" style="cursor:pointer;"><strong>Culture</strong></h5>
+                    <h5 data-toggle="collapse" data-target="#scCulture" ng-show="searchModel.params.culturalTraits.selectedVariables.length > 0" style="cursor:pointer;"><strong>Culture</strong></h5>
                        <ul id="scCulture" class="list-unstyled collapse in" style="padding-left:10px;">
-                        <li ng-repeat="(variable, codes) in searchModel.params.culturalTraits.selected" ng-show="codes.length > 0">
-                            <a ng-click="removeFromSearch(codes, 'variable')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ codes.variable_name }}
+                        <li ng-repeat="variable in searchModel.params.culturalTraits.selectedVariables" ng-show="variable.data_type == 'Continuous' || variable.selected.length > 0">
+                            <a ng-click="removeFromSearch(variable, 'variable')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ variable.name }}
                             <ul class="criteria-list">
-                                <li ng-repeat="code in codes">
-                                    <a ng-click="removeFromSearch(code, 'culture')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
+                                <li ng-repeat="code in variable.selected">
+                                    <a ng-click="removeFromSearch(code, 'cultural')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
                                 </li>
                             </ul>
                         </li>
                         </ul>
-                    <h5 data-toggle="collapse" data-target="#scEnv" ng-show="!isEmpty(searchModel.params.environmentalData.selectedVariables, 'environmental')" style="cursor:pointer;"><strong>Environment</strong></h5>
+                    <h5 data-toggle="collapse" data-target="#scEnv" ng-show="searchModel.params.environmentalData.selectedVariables | isEmpty" style="cursor:pointer;"><strong>Environment</strong></h5>
                        <ul id="scEnv" class="list-unstyled criteria-list collapse in" style="padding-left:10px;">
                             <li ng-repeat="variable in searchModel.params.environmentalData.selectedVariables" ng-show="variable.selectedVariable">
                                 <a ng-click="removeFromSearch(variable, 'environmental')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{variable.selectedVariable.name}}

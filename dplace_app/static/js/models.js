@@ -3,17 +3,16 @@
  * Created by dan on 7/30/14.
  */
 
-function SearchModel(VariableCategory, GeographicRegion, EnvironmentalCategory, LanguageFamily, DatasetSources, Language) {
+function SearchModel(VariableCategory, GeographicRegion, LanguageFamily, DatasetSources, Language) {
     this.reset = function() {
         this.results = {}; // Populated after search is run
         this.params = {}; // state for individual controllers
         this.query = {}; // Parameters sent to the FindSocieties API
         this.results.societies = [];
         this.results.languageTrees = [];
-        this.selected = [];
         this.params.culturalTraits = new CulturalTraitModel(VariableCategory, DatasetSources);
         this.params.geographicRegions = new GeographicRegionModel(GeographicRegion);
-        this.params.environmentalData = new EnvironmentalDataModel(EnvironmentalCategory);
+        this.params.environmentalData = new EnvironmentalDataModel(VariableCategory);
         this.params.languageClassifications = new LanguageClassificationModel(LanguageFamily, Language)
     };
 
@@ -57,7 +56,7 @@ function SearchModel(VariableCategory, GeographicRegion, EnvironmentalCategory, 
 function CulturalTraitModel(VariableCategory, DatasetSources) {
     this.categories = VariableCategory.query(); // these objects get annotated with variables
     this.sources = DatasetSources.query();
-    this.selected = {};
+    this.selectedVariables = [];
     this.selectedCategory = null;
     this.selectedVariable = null;
     this.badgeValue = 0;
@@ -69,9 +68,9 @@ function GeographicRegionModel(GeographicRegion) {
     this.badgeValue = 0;
 }
 
-function EnvironmentalDataModel(EnvironmentalCategory) {
+function EnvironmentalDataModel(VariableCategory) {
     this.variables = [];
-    this.categories = EnvironmentalCategory.query();
+    this.categories = VariableCategory.query({type: 'environmental'});
     this.filters = [
         { operator: 'inrange', name: 'between' },
         { operator: 'lt', name: 'less than'},
@@ -79,9 +78,7 @@ function EnvironmentalDataModel(EnvironmentalCategory) {
         { operator: 'outrange', name: 'outside'},
         { operator: 'all', name: 'all values'},
     ];
-    this.selectedFilter = this.filters[0];
     this.selectedVariables = [];
-    this.vals = [];
     this.badgeValue = 0;
 }
 

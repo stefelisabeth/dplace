@@ -38,7 +38,7 @@ describe('Testing geographic search', function() {
             .respond(200);
         $httpBackend.whenGET('/api/v1/geographic_regions?page_size=1000')
             .respond(200);
-        $httpBackend.whenGET('/api/v1/categories?type=environmental')
+        $httpBackend.whenGET('/api/v1/categories?page_size=1000&type=environmental')
             .respond(200);
         $httpBackend.whenGET('/api/v1/language_families?page_size=1000')
             .respond(200);

@@ -180,7 +180,7 @@ angular.module('languagePhylogenyDirective', [])
                 });
             };
                         
-            var constructTree = function(langTree) {   
+            var constructTree = function(langTree) { 
                 d3.select("language-phylogeny").html('');
                 var newick = Newick.parse(langTree.newick_string);
                 var w = 500;
@@ -201,6 +201,7 @@ angular.module('languagePhylogenyDirective', [])
                         .attr("class", "phylogeny")
                         .append("svg:g")
                         .attr("transform", "translate(2,5)");
+                        
                 
                 //WRITE C1, C2, E1, etc LABELS
                 if (langTree.name.indexOf("global") == -1) {
@@ -223,13 +224,11 @@ angular.module('languagePhylogenyDirective', [])
                             vis.append("svg:text")
                                 .attr("dx", w+translate-9)
                                 .attr("dy", 10)
-                                .text("C"+keysWritten);
+                                .text(scope.results.variable_descriptions[r].CID);
                             /*labels.append("svg:text")
                                 .attr("dx", w+translate)
                                 .attr("dy", 15)
                                 .text("C"+keysWritten);*/
-                            scope.results.variable_descriptions[r].CID = "C"+keysWritten;
-                            keysWritten++;
                             translate += 20;
                         }                 
                        
@@ -241,13 +240,11 @@ angular.module('languagePhylogenyDirective', [])
                             vis.append("svg:text")
                                 .attr("dx", w+translate-9)
                                 .attr("dy", 10)
-                                .text("E"+keysWritten);
+                                .text(scope.results.environmental_variables[r].CID);
                              /*labels.append("svg:text")
                                 .attr("dx", w+translate)
                                 .attr("dy", 15)
                                 .text("E"+keysWritten);*/
-                                scope.results.environmental_variables[r].CID = "E"+keysWritten;
-                                keysWritten++;
                                 translate += 20;
                         }
                     }
@@ -292,11 +289,7 @@ angular.module('languagePhylogenyDirective', [])
                     if (node.y > longest_y)
                         longest_y = node.y;
                 });
-                
-                //calculate time scale
-                /*var timeScaleYears = leafDistFromRoot * 100; //convert to years
-                var pixelScale = (w / timeScaleYears) * 100;*/
-                
+
                 var dotted = [];
                 var links = tree.links(nodes);
                 var link = vis.selectAll("path.link")
