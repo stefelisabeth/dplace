@@ -10,8 +10,8 @@ class EATestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.source = models.Source.objects.create(
-            year="2014",
-            author="Greenhill",
+            key="greenhill2014",
+            name="Greenhill 2014",
             reference="Great paper")
         cls.ea_society = models.Society.objects.create(
             ext_id='easoc',
@@ -92,3 +92,4 @@ class EATestCase(TestCase):
             glotto_code='xxxx1234'
         )
         assert L.get_absolute_url().endswith(L.glotto_code)
+

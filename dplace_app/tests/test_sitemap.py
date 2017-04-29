@@ -9,8 +9,8 @@ class SiteMapTestCase(TestCase):
 
     def setUp(self):
         self.source = models.Source.objects.create(
-            year="2014",
-            author="Greenhill",
+            key="greenhill2014",
+            name="Greenhill 2014",
             reference="Great paper")
         self.ea_society = models.Society.objects.create(
             ext_id='easoc',

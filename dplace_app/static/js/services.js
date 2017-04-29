@@ -140,7 +140,17 @@ angular.module('dplaceServices', ['ngResource'])
             '/api/v1/find_societies',
             {},{
                 find: {
-                    method: 'GET'
+                    method: 'GET',
+                    transformResponse: function(data, headers) {
+                        var i,
+                            sources = {},
+                            res = JSON.parse(data);
+                        for (i = 0; i < res.sources.length; i++) {
+                            sources[res.sources[i].id] = res.sources[i];
+                        }
+                        res.sources = sources;
+                        return res;
+                    }
                 }
             }
         )

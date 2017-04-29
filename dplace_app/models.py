@@ -81,13 +81,10 @@ class Society(models.Model):
 
     def get_data_references(self):
         """Returns the references for the cultural trait data"""
-        refs = []
-        qset = self.value_set
-        for value in qset.all():
-            for r in value.references.all():
-                if r not in refs:
-                    refs.append(r)
-        return sorted(refs, key=lambda r: r.author)
+        refs = set()
+        for value in self.value_set.all():
+            refs = refs.union(r.source for r in value.references.all())
+        return sorted(refs, key=lambda r: r.key)
 
     def __unicode__(self):
         return "%s - %s" % (self.ext_id, self.name)
@@ -217,7 +214,6 @@ class Value(models.Model):
     code = models.ForeignKey('CodeDescription', db_index=True, null=True)
     source = models.ForeignKey('Source', null=True)
     comment = models.TextField(default="")
-    references = models.ManyToManyField('Source', related_name="references")
     subcase = models.TextField(default="")
     focal_year = models.CharField(max_length=10, default="")
 
@@ -239,30 +235,31 @@ class Value(models.Model):
             ['society', 'coded_value', 'focal_year', 'subcase'],
             ['society', 'code', 'focal_year'],
         ]
-        unique_together = ('variable', 'society', 'coded_value', 'comment', 'subcase', 'focal_year')
+        unique_together = (
+            'variable', 'society', 'coded_value', 'comment', 'subcase', 'focal_year'
+        )
 
 
 class Source(models.Model):
     """
     Stores references for Value, also for dataset sources.
     """
-    # Not really sure if we should separate dataset sources from references (I
-    # think we should), but since all the code has already been written with
-    # this model, I won't change it yet.
-
-    # text, because might be '1996', '1999-2001', or 'ND'
-    year = models.CharField(max_length=30, db_index=True)
-    author = models.TextField(db_index=True)
+    key = models.CharField(max_length=50, db_index=True, null=False, unique=True)
     reference = models.TextField()
     name = models.CharField(max_length=100, db_index=True, default="")
 
     def __unicode__(self):
-        return "%s (%s)" % (self.author, self.year)
+        return self.name
 
     class Meta(object):
-        unique_together = ('year', 'author')
         ordering = ('name', )
-        
+
+
+class Reference(models.Model):
+    source = models.ForeignKey(Source, related_name="references")
+    value = models.ForeignKey(Value, related_name="references")
+    pages = models.CharField(max_length=100, default='')
+
 
 class LanguageFamily(models.Model):
     name = models.CharField(max_length=50, db_index=True)
@@ -295,7 +292,7 @@ class GeographicRegion(models.Model):
     level_2_re = models.FloatField()
     count = models.FloatField()
     region_nam = models.CharField(max_length=254, db_index=True)
-    continent = models.CharField(max_length=254,  db_index=True)
+    continent = models.CharField(max_length=254, db_index=True)
     tdwg_code = models.IntegerField()
 
     def __unicode__(self):

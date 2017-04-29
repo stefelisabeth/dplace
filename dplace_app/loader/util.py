@@ -2,7 +2,34 @@
 from __future__ import unicode_literals
 import logging
 
-from dplace_app.models import GeographicRegion
+from clldutils.misc import slug
+from dplace_app.models import GeographicRegion, Source
+
+_SOURCE_CACHE = {}
+
+
+def as_source(obj):
+    return Source.objects.create(
+        key=slug(obj.name), **{k: getattr(obj, k) for k in 'name reference'.split()})
+
+
+def get_source(ds):
+    dsid = getattr(ds, 'id', ds)
+    if dsid not in _SOURCE_CACHE:
+        try:
+            o = Source.objects.get(name=ds.name)
+        except Source.DoesNotExist:
+            o = as_source(ds)
+            o.save()
+        _SOURCE_CACHE[ds.id] = o
+    return _SOURCE_CACHE[dsid]
+
+
+def load_references(repos):
+    for src in repos.sources.iterentries():
+        Source.objects.bulk_create([
+            Source(key=src.key, name=src.fields['key'], reference=src.text())])
+    return 1
 
 
 def configure_logging(test=False):

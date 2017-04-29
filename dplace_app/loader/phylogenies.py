@@ -6,6 +6,7 @@ from ete3 import Tree
 from dplace_app.models import (
     Society, LanguageTree, LanguageTreeLabels, LanguageTreeLabelsSequence,
 )
+from dplace_app.loader.util import as_source
 
 
 def load_phylogenies(repos):
@@ -23,7 +24,7 @@ def _load(obj, sources, sequences):
     tree = LanguageTree.objects.create(name=obj.id)
     source = sources.get((obj.author, obj.year))
     if not source:
-        sources[(obj.author, obj.year)] = source = obj.as_source()
+        sources[(obj.author, obj.year)] = source = as_source(obj)
         source.save()
     tree.source = source
 
@@ -39,17 +40,14 @@ def _load(obj, sources, sequences):
     Tree(tree.newick_string, format=1)
 
     for item in obj.taxa:
-        name_on_tip = item['taxon']
-        xd_ids = nfilter(i.strip() for i in item['xd_ids'].split(','))
-        society_ids = nfilter(i.strip() for i in item['soc_ids'].split(','))
-        if not xd_ids:
+        if not item.xd_ids:
             continue
 
-        label = LanguageTreeLabels.objects.create(languageTree=tree, label=name_on_tip)
+        label = LanguageTreeLabels.objects.create(languageTree=tree, label=item.taxon)
         tree.taxa.add(label)
-        for society in Society.objects.all().filter(xd_id__in=xd_ids):
+        for society in Society.objects.all().filter(xd_id__in=item.xd_ids):
             try:
-                f_order = len(society_ids) - society_ids.index(society.ext_id) - 1
+                f_order = len(item.soc_ids) - item.soc_ids.index(society.ext_id) - 1
             except:
                 f_order = 0
             sequences.append(LanguageTreeLabelsSequence(

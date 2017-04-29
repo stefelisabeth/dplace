@@ -87,7 +87,8 @@ class SocietyViewSet(viewsets.ReadOnlyModelViewSet):
         xd_id = models.Society.objects.filter(
             xd_id=society.xd_id).exclude(ext_id=society_id)
         if society.hraf_link and '(' in society.hraf_link:
-            hraf_link = society.hraf_link.split('(')[len(society.hraf_link.split('('))-1]
+            length = len(society.hraf_link.split('(')) - 1
+            hraf_link = society.hraf_link.split('(')[length]
         else:
             hraf_link = ''
         environmentals = society.get_environmental_data()
@@ -103,7 +104,7 @@ class SocietyViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(
             {
                 'society': society,
-                'hraf_link': hraf_link[0:len(hraf_link)-1],
+                'hraf_link': hraf_link[0:len(hraf_link) - 1],
                 'xd_id': xd_id,
                 'location': location,
                 'language_classification': language_classification,
@@ -123,7 +124,7 @@ class LargeResultsSetPagination(PageNumberPagination):
 
 class VeryLargeResultsSetPagination(PageNumberPagination):
     page_size = 3000
-    # do not set: page_size_query_param = 'page_size' 
+    # do not set: page_size_query_param = 'page_size'
     # it sets page_size to default 1000 - internal bug??
     max_page_size = 3000
 
@@ -152,8 +153,8 @@ class LanguageFamilyViewSet(viewsets.ReadOnlyModelViewSet):
 
 class TreeResultsSetPagination(PageNumberPagination):
     """
-    Since trees may have *many* languages, which are serialized as well, we limit the
-    page size to just 1.
+    Since trees may have *many* languages, which are serialized as well, we
+    limit the page size to just 1.
     """
     page_size = 3
     page_size_query_param = 'page_size'
@@ -313,10 +314,15 @@ def result_set_from_query_dict(query_dict):
         if result_set.variable_descriptions:
             for cval in soc.selected_cvalues:
                 soc_result.variable_coded_values.add(cval)
+                result_set.sources = result_set.sources.union(
+                    r.source_id for r in cval.references.all())
         if result_set.environmental_variables:
             for eval in soc.selected_evalues:
                 soc_result.environmental_values.add(eval)
+                result_set.sources = result_set.sources.union(
+                    r.source_id for r in eval.references.all())
         result_set.societies.add(soc_result)
+    result_set.sources = models.Source.objects.filter(id__in=result_set.sources).all()
 
     log.info('mid 1: %s' % (time() - _s,))
 
