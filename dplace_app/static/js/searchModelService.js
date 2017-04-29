@@ -36,10 +36,10 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
         societies = results.societies;         
         for (var i = 0; i < results.environmental_variables.length; i++) {
             results.environmental_variables[i].CID = "E"+(i+1);
-            if (results.environmental_variables[i].data_type != 'Continuous') continue;
+            if (results.environmental_variables[i].variable.data_type != 'Continuous') continue;
             extractedValues = societies.map(function(society) { 
                 for (var j = 0; j < society.environmental_values.length; j++) {
-                    if (society.environmental_values[j].variable == results.environmental_variables[i].id) {
+                    if (society.environmental_values[j].variable == results.environmental_variables[i].variable.id) {
                         if (society.environmental_values[j].coded_value_float) return society.environmental_values[j].coded_value_float;
                     }
                 }
@@ -77,10 +77,10 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
             })
         }   
         results = calculateRange(results);
-        var colorMap = colorMapService.generateColorMap(results);
-        results.societies.forEach(function(container) {
+        results = colorMapService.generateColorMap(results);
+       /* results.societies.forEach(function(container) {
             container.society.style = {'background-color': colorMap[container.society.id] };
-        });
+        });*/
     }
     
     this.searchCompletedCallback = function() {

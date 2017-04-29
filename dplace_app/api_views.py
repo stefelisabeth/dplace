@@ -251,6 +251,15 @@ def result_set_from_query_dict(query_dict):
             result_set.variable_descriptions.add(serializers.VariableCode(variable.codes, variable))
 
     if 'e' in query_dict:
+        variables = {
+            v.id: v for v in models.Variable.objects
+            .filter(id__in=[x[0] for x in query_dict['e']])
+            .prefetch_related(Prefetch(
+                'codes',
+                queryset=models.CodeDescription.objects
+                .filter(id__in=[x[0] for x in query_dict['e']])))
+        }
+
         # There can be multiple filters, so we must aggregate the results.
         for varid, criteria in groupby(
             sorted(query_dict['e'], key=lambda c: c[0]),
@@ -259,7 +268,7 @@ def result_set_from_query_dict(query_dict):
             join_values(varid, criteria)
 
         for variable in models.Variable.objects.filter(id__in=[x[0] for x in query_dict['e']]):
-            result_set.environmental_variables.add(variable)
+            result_set.environmental_variables.add(serializers.VariableCode(variable.codes, variable))
 
     if 'p' in query_dict:
         sql_joins.append(('geographicregion', 'r', 'r.id = s.region_id'))
@@ -296,7 +305,7 @@ def result_set_from_query_dict(query_dict):
             'value_set',
             to_attr='selected_evalues',
             queryset=models.Value.objects
-            .filter(variable_id__in=[v.id for v in result_set.environmental_variables])
+            .filter(variable_id__in=[v.variable.id for v in result_set.environmental_variables])
             .prefetch_related('references')))
 
     for i, soc in enumerate(soc_query):

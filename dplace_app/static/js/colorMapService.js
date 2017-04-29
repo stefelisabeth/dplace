@@ -68,9 +68,9 @@ function ColorMapService() {
 
     //blue to red gradient for environmental variables
     this.tempColor = function(index, min, max, name) {
-        if (name == "Monthly Mean Net Primary Production" || name == "Mean Growing Season NPP") {
+        if (name.indexOf("Net primary production") != -1 || name.indexOf("NPP") != -1) {
             hue = 30 + (((index - min) / (max - min)) * 88);
-        } else if (name == "Annual Mean Precipitation"){
+        } else if (name.indexOf("precipitation") != -1) {
             color = this.mapColorMonochrome(min, max, index, 252);
             return color;
         }
@@ -102,72 +102,78 @@ function ColorMapService() {
     }
 
     this.generateColorMap = function(results) {
-        var colors = {};
         
-        for (var i = 0; i < results.societies.length; i++) {
-            var society = results.societies[i];
-            if (society.society.region) {
-                code = results.geographic_regions.map(function(a) { return a.tdwg_code; }).indexOf(society.society.region.tdwg_code);
-                if (code != -1)
-                    var color = this.mapColor(code, results.geographic_regions.length);
-                else
-                    var color = this.mapColor(society.society.region.tdwg_code, results.geographic_regions.length);
-                colors[society.society.id] = color;
+        // assigns a color to each code for categorical/ordinal variables. Stores in .codes as code: {name, color}
+        var new_codes = {}
+        for (var i = 0; i < results.geographic_regions.length; i++) {
+            new_codes[results.geographic_regions[i].tdwg_code] = this.mapColor(i, results.geographic_regions.length);
+        }
+        results.geographic_regions.codes = new_codes;
+        
+        if (results.classifications) {
+            new_codes = {}
+            for (var i = 0; i < results.classifications.length; i++) {
+                new_codes[results.classifications[i].id] = this.mapColor(i, results.classifications.length);
+            }
+            results.classifications.codes = new_codes;
+        }
+        
+        continuous_vars = {}
+        for (var j = 0; j < results.variable_descriptions.length; j++) {
+            if (results.variable_descriptions[j].variable.data_type.toLowerCase() == 'continuous') {
+                continuous_vars[results.variable_descriptions[j].variable.id] = results.variable_descriptions[j];
+                continue;
             }
             
-            if (results.languages.length > 0 && society.environmental_values.length == 0 && society.variable_coded_values.length == 0) {        
-                code = results.classifications.map(function(a) { return a.id; }).indexOf(society.society.language.family.id);
-                if (code != -1)
-                    var color = this.mapColor(code, results.classifications.length);
-                else
-                    var color = this.mapColor(society.society.language.family.id, results.classifications.length);
-                colors[society.society.id] = color;
-            }
-            
-            for (var j = 0; j < society.environmental_values.length; j++) {
-                variable = results.environmental_variables.filter(function(env_var) {
-                    return env_var.id == society.environmental_values[j].variable;
-                });
-                if (variable.length > 0) {
-                    if (variable[0].data_type.toUpperCase() == 'CATEGORICAL') {
-                        var color = this.tempColor(society.environmental_values[j].code_description.id, Math.min.apply(null,variable[0].codes.map(function(c) { return c.id; })), Math.max.apply(null,variable[0].codes.map(function(c) { return c.id; })), variable[0].name);
-                    } else {
-                        var color = this.tempColor(society.environmental_values[j].coded_value_float,  variable[0].min, variable[0].max, variable[0].name);
-                    }
-                    colors[society.society.id] = color;
-                }    
-            }
-            
-            for (var j = 0; j < society.variable_coded_values.length; j++) {
-                variable_description = results.variable_descriptions.filter(function(variable) {
-                    return variable.variable.id == society.variable_coded_values[j].variable;
-                });
-                
-                if (variable_description[0].variable.data_type.toUpperCase() == 'ORDINAL') {
-                    // there are 5 ordinal variables in the database
-                    var color = this.generateRandomHue(society.variable_coded_values[j].coded_value, variable_description[0].codes.length, variable_description[0].variable.id, 5);
-                    colors[society.society.id] = color;
-                } else if (variable_description[0].variable.data_type.toUpperCase() == 'CONTINUOUS') {
-                    var color = this.mapColorMonochrome(variable_description[0].min, variable_description[0].max, society.variable_coded_values[j].coded_value_float, 0);
-                    colors[society.society.id] = color;
-                } else {
-                    if (society.variable_coded_values[j].coded_value == 'NA') {
-                        colors[society.society.id] = 'rgb(255,255,255)';
-                    } else {
-                        if (variable_description[0].variable.label == "EA094") { //this variable's codes range from 11-99, for some reason
-                            for (var k = 0; k < variable_description[0].codes.length; k++) {
-                                if (variable_description[0].codes[k].code == society.variable_coded_values[j].coded_value) {
-                                    colors[society.society.id] = this.colorMap[k+1];
-                                    break;
-                                }
-                            }
-                        } else 
-                            colors[society.society.id] = this.colorMap[parseInt(society.variable_coded_values[j].coded_value)];
+            new_codes = {}
+            for (var i = 0; i < results.variable_descriptions[j].codes.length; i++) {
+                new_codes[results.variable_descriptions[j].codes[i].code] = results.variable_descriptions[j].codes[i];
+                if (results.variable_descriptions[j].codes[i].code == 'NA')
+                    new_codes[results.variable_descriptions[j].codes[i].code]= 'rgb(255,255,255)';
+                else {
+                    if (results.variable_descriptions[j].variable.data_type.toLowerCase() == 'ordinal') {
+                        new_codes[results.variable_descriptions[j].codes[i].code] = this.generateRandomHue(parseInt(results.variable_descriptions[j].codes[i].code),results.variable_descriptions[j].codes.length, results.variable_descriptions[j].variable.id, 5);  
+                    } else if (results.variable_descriptions[j].variable.data_type.toLowerCase() == 'categorical') {
+                        new_codes[results.variable_descriptions[j].codes[i].code] = this.colorMap[parseInt(results.variable_descriptions[j].codes[i].code)%this.colorMap.length];
                     }
                 }
             }
-
+            results.variable_descriptions[j].codes.codes = new_codes;
         }
-        return colors;
+        
+        for (var j = 0; j < results.environmental_variables.length; j++) {
+            if (results.environmental_variables[j].variable.data_type.toLowerCase() == 'continuous') {
+                continuous_vars[results.environmental_variables[j].variable.id] = results.environmental_variables[j];
+                continue;
+            }
+            
+            new_codes = {}
+            for (var i = 0; i < results.environmental_variables[j].codes.length; i++) {
+                if (results.environmental_variables[j].codes[i].code == 'NA') new_codes[results.environmental_variables[j].codes[i].code] = 'rgb(255,255,255)';
+                else {
+                    new_codes[results.environmental_variables[j].codes[i].code] = this.tempColor(i, 0, results.environmental_variables[j].codes.length, results.environmental_variables[j].variable.name);
+                }
+            }
+            results.environmental_variables[j].codes.codes = new_codes;
+        }
+        
+        // for continuous variables, get color and save it with the value
+        for (var j = 0; j < results.societies.length ; j++) {
+            for (var i = 0; i < results.societies[j].variable_coded_values.length; i++) {
+                if (results.societies[j].variable_coded_values[i].variable in continuous_vars) {
+                    if (results.societies[j].variable_coded_values[i].coded_value.toUpperCase() == 'NA') results.societies[j].variable_coded_values[i]['color'] = 'rgb(255, 255, 255)'
+                    else
+                        results.societies[j].variable_coded_values[i]['color'] = this.mapColorMonochrome(continuous_vars[results.societies[j].variable_coded_values[i].variable].min, continuous_vars[results.societies[j].variable_coded_values[i].variable].max, results.societies[j].variable_coded_values[i].coded_value_float, 0);
+                }
+            }
+            
+            for (var i = 0; i < results.societies[j].environmental_values.length; i++) {
+                if (results.societies[j].environmental_values[i].variable in continuous_vars) {
+                    results.societies[j].environmental_values[i]['color'] = this.tempColor(results.societies[j].environmental_values[i].coded_value_float, continuous_vars[results.societies[j].environmental_values[i].variable].min, continuous_vars[results.societies[j].environmental_values[i].variable].max, continuous_vars[results.societies[j].environmental_values[i].variable].variable.name); 
+            
+                }
+            }
+        }
+        return results;
     };
 }

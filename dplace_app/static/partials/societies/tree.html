@@ -36,7 +36,7 @@
         <select 
             ng-model="results.chosenTVariable"
             class="form-control"
-            ng-options="variable.name for variable in variables"
+            ng-options="v.variable.name for v in variables"
             ng-init="results.chosenTVariable=variables[0]"
             style="width:auto;"
              >
@@ -67,20 +67,21 @@
     </language-phylogeny>
     </td><td style="vertical-align:top;">
     <div id="legend" ng-show="results.selectedTree">
-        <i ng-show="!globalTree && ((results.variable_descriptions.length > 0) || (results.environmental_variables.length > 0))">Click on a variable title to expand or collapse variable legend.</i>
-            <div ng-repeat="variable in results.variable_descriptions" ng-class="{'panel panel-default':!globalTree}" style="margin-bottom:5px;">
+        <i ng-show="!globalTree && variables.length > 0">Click on a variable title to expand or collapse variable legend.</i>
+            <div ng-repeat="variable in variables" ng-class="{'panel panel-default':!globalTree}" style="margin-bottom:5px;">
                 <div class="panel-heading" ng-show="!globalTree"> 
                     <a ng-click="check(variable)" data-toggle="collapse" data-parent="#legend" data-target="#{{variable.CID}}" style="color:#000;"><b>{{variable.CID}}:</b> {{variable.variable.name}} <br><em style="font-size:12px;">{{variable.variable.codebook_info}}</em></a>
                 </div>
-                <div id="{{variable.CID}}" ng-class="{'panel-collapse collapse': !globalTree, 'in': variable.CID == 'C1'}" ng-show="(!globalTree || (globalTree && results.chosenTVariable.label==variable.variable.label))">
+                
+                <div id="{{variable.CID}}" ng-class="{'panel-collapse collapse': !globalTree, 'in': variable.CID == variables[0].CID}" ng-show="(!globalTree || (globalTree && results.chosenTVariable.variable.label==variable.variable.label))">
                     <div class="leg-panel panel-body">
-                    <svg ng-show="variable.variable.data_type !== 'Continuous'" ng-attr-height="{{variable.svgHeight}}" width="600" class="tree-legend legends" var-id="{{variable.variable.id}}">
+                    <svg ng-show="variable.variable.data_type !== 'Continuous'" ng-attr-height="{{ 500 * 2 }}" width="600" class="tree-legend legends" var-id="{{variable.variable.id}}">
                         <g ng-repeat="c in variable.codes" transform="{{$index|transformG}}">
                         <circle
                                     cx="10"
                                     cy="10"
                                     r="4.5"
-                                    fill="{{c.code|colorNode:variable}}"
+                                    fill="{{variable.codes.codes[c.code]}}"
                                     stroke="#000"
                                     stroke-width="0.5"
                                     />
@@ -97,23 +98,9 @@
                                 stroke-width="0.5"
                                 />
                             <text x="20" y="15">Missing Data</text>
-                        <rect x="10" y="25" fill = "url({{variable.variable.fill}})" height="30" width="250" />
-                        <text x="0" y="70">{{variable.variable.min}} {{variable.variable.units}}</text>
-                        <text x="240" y="70">{{variable.variable.max}} {{variable.variable.units}}</text>
-                    </svg>
-                    </div>
-                </div>
-            </div>
-            <div ng-repeat="environmental in results.environmental_variables" ng-class="{'panel panel-default':!globalTree}" style="margin-bottom:5px;">
-                <div class="panel-heading" ng-show="!globalTree">
-                    <a data-toggle="collapse" data-parent="#legend" data-target="#e{{environmental.id}}" style="color: #000;"><b>{{environmental.CID}}:</b> {{environmental.name}}</a>
-                </div>
-                <div id="e{{environmental.id}}" ng-class="{'panel-collapse collapse':!globalTree, 'in': (environmental.CID == 'E1' && results.variable_descriptions.length == 0)}" ng-show="(!globalTree || (globalTree && results.chosenTVariable.name==environmental.name))">
-                    <div class="leg-panel panel-body">
-                    <svg height="70" width="400" class="envLegend legends" style="font-size: 12px;" var-id="{{environmental.id}}">
-                        <rect y="10" height="30" width="230" x="20" fill="url({{environmental.fill}})"/>
-                        <text x="0" y="60">{{environmental.min}} {{environmental.units}}</text>
-                        <text x="230" y="60">{{environmental.max}} {{environmental.units}}</text>
+                        <rect x="10" y="25" fill = "url({{variable.fill}})" height="30" width="250" />
+                        <text x="0" y="70">{{variable.min}} {{variable.variable.units}}</text>
+                        <text x="240" y="70">{{variable.max}} {{variable.variable.units}}</text>
                     </svg>
                     </div>
                 </div>
@@ -127,7 +114,7 @@
                                         cx="10"
                                         cy="10"
                                         r="4.5"
-                                        fill="{{$index|colorNode:results}}"
+                                        fill="{{results.classifications.codes[code.id]}}"
                                         stroke="#000"
                                         stroke-width="0.5"
                                         />
@@ -146,7 +133,7 @@
                                         cx="10"
                                         cy="10"
                                         r="4.5"
-                                        fill="{{$index|colorNode:results}}"
+                                        fill="{{results.geographic_regions.codes[region.tdwg_code]}}"
                                         stroke="#000"
                                         stroke-width="0.5"
                                         />

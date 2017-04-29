@@ -25,56 +25,6 @@ angular.module('dplaceFilters', [])
             return selected.filter(function(code) { return code.variable == selectedVariable ;});
         };
     })
-    .filter('colorNode', ['colorMapService', function(colorMapService) {
-        return function(value, codes) {
-            if (codes.societies) {
-                if (codes.classifications) {
-                    rgb = colorMapService.mapColor(value, codes.classifications.length);
-                    return rgb;
-                }
-                if (codes.geographic_regions.length > 0) {
-                    rgb = colorMapService.mapColor(value, codes.geographic_regions.length);
-                    return rgb;
-                } 
-            }
-            
-            if (codes.type == 'environmental') {
-                min = Math.min.apply(null,codes.codes.map(function(c) { return c.id; }));
-                max = Math.max.apply(null,codes.codes.map(function(c) { return c.id; }));
-                rgb = colorMapService.tempColor(value, min, max, '');
-                return rgb;
-            }
-            
-        
-            var missingData = false;
-            var missingDataValue;
-            for (var i = 0; i < codes.codes.length; i++) {
-                if (codes.codes[i].description && codes.codes[i].description.indexOf("Missing data") != -1) {
-                    missingData = true;
-                    missingDataValue = codes.codes[i].code;
-                    break;
-                }
-            }
-            if (missingData && value == missingDataValue) return 'rgb(255, 255, 255)';
-            else {
-                if (codes.variable.data_type.toUpperCase() == 'ORDINAL') {
-                    rgb = colorMapService.generateRandomHue(value, codes.codes.length,codes.variable.id,5);
-                } else {
-                    if (codes.variable.label == "EA094") {
-                        for (var k = 0; k < codes.codes.length; k++) {
-                            if (codes.codes[k].code == value) {
-                                rgb = colorMapService.colorMap[k+1];
-                                break;
-                            }
-                            
-                        }
-                    } else 
-                        rgb = colorMapService.colorMap[parseInt(value)];
-                }
-                return rgb;
-            }
-        }
-    }])
     .filter('numValues', function() {
         return function(values, variable_id) {
             return values.filter(function(code_value) {
