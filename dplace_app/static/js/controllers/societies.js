@@ -159,8 +159,15 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, T
                         .attr("version", 1.1)
                         .attr("xmlns", "http://www.w3.org/2000/svg")
                         .attr("height", function() {
-                            if ($scope.results.chosenVariable && $scope.results.environmental_variables.length > 0 && $scope.results.chosenVariable == $scope.results.environmental_variables[0]) return "500";
-                            else return "1500";
+                            if ($scope.results.chosenVariable && $scope.results.chosenVariable.variable.data_type.toLowerCase() == 'continuous') return "500";
+                            else if ($scope.results.chosenVariable) return "2000"
+                            else {
+                                if ($scope.results.classifications)
+                                    return $scope.results.classifications.length*35;
+                                else {
+                                    return $scope.results.geographic_regions.length*35;
+                                }
+                            }
                         })
                         .node().parentNode.innerHTML;
         map_svg = map_svg.substring(0, map_svg.indexOf("<div")); //remove zoom in/out buttons from map
@@ -175,7 +182,6 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, T
                 legend_svg = "<g transform='translate(20,350)'>"+d3.select(".cont-gradient-td").node().innerHTML+"</g>";
             } else {
                 for (var c = 0; c < $scope.results.chosenVariable.codes.length; c++) {
-                    console.log($scope.results.chosenVariable.codes[c]);
                     g = legend.append("svg:g")
                         .attr("transform", function() {
                                 return 'translate(20,'+((num_lines)*25)+')';
