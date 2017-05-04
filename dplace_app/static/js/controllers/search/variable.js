@@ -87,6 +87,7 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, DatasetSo
             if (variable.selected.map(function(v) { return v.id; }).indexOf(code.id) == -1) {
                 variable.selected.push(code);
                 if (variable.type == 'cultural') $scope.searchModel.getCulturalTraits().badgeValue++;
+                else if (variable.type == 'environmental') $scope.searchModel.getEnvironmentalData().badgeValue = $scope.variables.map(function(v) { return v.selectedVariable; }).length;
             }
         } else {
             $scope.removeFromSearch(code, variable.type);        
