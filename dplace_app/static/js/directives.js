@@ -534,7 +534,6 @@ angular.module('dplaceMapDirective', [])
                     // Map IDs to colors
                     var colorMap = {};
                     if (scope.chosen) {
-                        console.log(scope.chosen);
                         if (scope.chosen.variable.data_type.toLowerCase() == 'categorical' || scope.chosen.variable.data_type.toLowerCase() == 'ordinal') {
                             scope.results.societies.forEach(function(society) {
                                 list = (scope.chosen.variable.type.toLowerCase() == 'cultural') ? society.variable_coded_values : society.environmental_values;
