@@ -1,7 +1,6 @@
 function ColorMapService() {
     //an array of colors for coded values
     this.colorMap = [
-        'NaN',
         'rgb(228,26,28)',
         'rgb(69,117,180)',
         'rgb(77,146,33)',
@@ -134,7 +133,7 @@ function ColorMapService() {
                     if (results.variable_descriptions[j].variable.data_type.toLowerCase() == 'ordinal') {
                         new_codes[results.variable_descriptions[j].codes[i].code] = this.generateRandomHue(parseInt(results.variable_descriptions[j].codes[i].code),results.variable_descriptions[j].codes.length, results.variable_descriptions[j].variable.id, 5);  
                     } else if (results.variable_descriptions[j].variable.data_type.toLowerCase() == 'categorical') {
-                        new_codes[results.variable_descriptions[j].codes[i].code] = this.colorMap[parseInt(results.variable_descriptions[j].codes[i].code)%this.colorMap.length];
+                        new_codes[results.variable_descriptions[j].codes[i].code] = this.colorMap[parseInt(results.variable_descriptions[j].codes[i].code-1)%this.colorMap.length];
                     }
                 }
             }
@@ -161,7 +160,7 @@ function ColorMapService() {
         for (var j = 0; j < results.societies.length ; j++) {
             for (var i = 0; i < results.societies[j].variable_coded_values.length; i++) {
                 if (results.societies[j].variable_coded_values[i].variable in continuous_vars) {
-                    if (results.societies[j].variable_coded_values[i].coded_value.toUpperCase() == 'NA') results.societies[j].variable_coded_values[i]['color'] = 'rgb(255, 255, 255)'
+                    if (results.societies[j].variable_coded_values[i].coded_value == 'NA') results.societies[j].variable_coded_values[i]['color'] = 'rgb(255, 255, 255)'
                     else
                         results.societies[j].variable_coded_values[i]['color'] = this.mapColorMonochrome(continuous_vars[results.societies[j].variable_coded_values[i].variable].min, continuous_vars[results.societies[j].variable_coded_values[i].variable].max, results.societies[j].variable_coded_values[i].coded_value_float, 0);
                 }
@@ -169,8 +168,8 @@ function ColorMapService() {
             
             for (var i = 0; i < results.societies[j].environmental_values.length; i++) {
                 if (results.societies[j].environmental_values[i].variable in continuous_vars) {
+                    if (results.societies[j].environmental_values[i].coded_value == 'NA') results.societies[j].environmental_values[i]['color'] = 'rgb(255,255,255)'
                     results.societies[j].environmental_values[i]['color'] = this.tempColor(results.societies[j].environmental_values[i].coded_value_float, continuous_vars[results.societies[j].environmental_values[i].variable].min, continuous_vars[results.societies[j].environmental_values[i].variable].max, continuous_vars[results.societies[j].environmental_values[i].variable].variable.name); 
-            
                 }
             }
         }
