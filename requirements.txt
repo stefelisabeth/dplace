@@ -1,7 +1,7 @@
 pydplace==0.4
 Django==1.11.3
 django-appconf==1.0.2
-django-bootstrap3==8.2.3
+django-bootstrap3==9.0.0
 django-filter==1.0.4
 djangorestframework==3.6.3
 ete3==3.0.0b35
