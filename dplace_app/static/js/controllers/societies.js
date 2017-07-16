@@ -61,11 +61,23 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, T
     
     var searchCompletedCallback = function() {
         searchModelService.searchCompletedCallback();
-        $scope.results = $scope.searchModel.results;
+        $scope.results = searchModelService.getModel().getResults();
         $scope.query = searchModelService.getModel().getQuery();
-        assignGradient();
         concatenateVariables();
+        assignGradient();
+        $scope.addTrees();
     };
+    
+        
+    $scope.addTrees = function() {
+        if (!$scope.results) return;
+        if ($scope.results.language_trees && $scope.results.language_trees.length > 0) return;
+        if ($scope.tabs[2].active) {
+            list = $scope.results.societies.map(function(s) { return s.society.id});
+            society_ids = {'s': list};
+            $scope.results.language_trees = TreesFromSocieties.find(society_ids, sortTrees);
+        }
+    }
 
     if (!$scope.searchModel.results.searched && !$scope.searchModel.results.searchedByName) {
         var queryObject = $location.search();
@@ -84,13 +96,15 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, T
             $scope.results = FindSocieties.find(queryObject);
             $scope.searchModel.results.searchedByName = true;
         }
+        $scope.results = searchModelService.getModel().getResults();
+        $scope.query = searchModelService.getModel().getQuery();  
     } else {
         $scope.results = searchModelService.getModel().getResults();
         $scope.query = searchModelService.getModel().getQuery();
-        assignGradient();
         concatenateVariables();
+        assignGradient();
     }
-    
+        
     var sortTrees = function() {
         $scope.results.language_trees.phylogeny = [];
         $scope.results.language_trees.glottolog = [];
@@ -103,15 +117,6 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, T
                 $scope.results.language_trees.phylogeny.push(tree);
             }
         });
-    }
-    
-    $scope.addTrees = function() {
-        if ($scope.results.language_trees && $scope.results.language_trees.length > 0) return;
-        if ($scope.tabs[2].active) {
-            list = $scope.results.societies.map(function(s) { return s.society.id});
-            society_ids = {'s': list};
-            $scope.results.language_trees = TreesFromSocieties.find(society_ids, sortTrees);
-        }
     }
 
     var num_lines = 0;              
