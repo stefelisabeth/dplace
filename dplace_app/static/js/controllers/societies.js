@@ -1,4 +1,4 @@
-function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, colorMapService, TreesFromSocieties, FindSocieties) {
+function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, TreesFromSocieties, FindSocieties) {
 
     $scope.appendQueryString();
     
@@ -14,8 +14,6 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
         }
     }
     $scope.cookieValue = cookieValue;
-    $scope.results = searchModelService.getModel().getResults();
-    $scope.query = searchModelService.getModel().getQuery();
     $scope.searchModel = searchModelService.getModel();
     $scope.csvDownloadButton = {text: 'CSV', disabled: false};
     $scope.globalTree = false;
@@ -42,34 +40,44 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
         if($scope.results.variable_descriptions) {
             $scope.results.variable_descriptions.forEach(function(v) { 
                 if (v.variable.data_type.toLowerCase() == 'continuous') {
-                        v.variable.fill = "/"+window.location.href.split('/').pop()+"#grad1";
-                        v.variable.min = v.min;
-                        v.variable.max = v.max;
+                        v.fill = "/"+window.location.href.split('/').pop()+"#grad1";
                 }
             });
         }
         if($scope.results.environmental_variables) {
             $scope.results.environmental_variables.forEach(function(v) {
-                if (v.name == "Annual Mean Precipitation") v.fill = "/"+window.location.href.split('/').pop()+"#blue";
-                    else if (v.name == "Monthly Mean Net Primary Production" || v.name == "Mean Growing Season NPP") v.fill = "/"+window.location.href.split('/').pop()+"#earthy";
+                if (v.variable.name.indexOf("precipitation") != -1) v.fill = "/"+window.location.href.split('/').pop()+"#blue";
+                    else if (v.variable.name.indexOf("Net primary production") != -1 || v.variable. name.indexOf("NPP") != -1) v.fill = "/"+window.location.href.split('/').pop()+"#earthy";
                     else v.fill = "/"+window.location.href.split('/').pop()+"#temp";
             });
         }
     }
     
     var concatenateVariables = function() {
-        if ($scope.results.variable_descriptions) $scope.variables = $scope.variables.concat($scope.results.variable_descriptions.map(function(v) { return v.variable; }));
+        if ($scope.results.variable_descriptions) $scope.variables = $scope.variables.concat($scope.results.variable_descriptions);
         if ($scope.results.environmental_variables) $scope.variables = $scope.variables.concat($scope.results.environmental_variables);
-        if ($scope.variables.length > 0) $scope.results.chosenVariable = $scope.variables[0];
+        $scope.results.chosenVariable = $scope.variables[0];
     }
     
     var searchCompletedCallback = function() {
         searchModelService.searchCompletedCallback();
-        $scope.results = $scope.searchModel.results;
+        $scope.results = searchModelService.getModel().getResults();
         $scope.query = searchModelService.getModel().getQuery();
-        assignGradient();
         concatenateVariables();
+        assignGradient();
+        $scope.addTrees();
     };
+    
+        
+    $scope.addTrees = function() {
+        if (!$scope.results) return;
+        if ($scope.results.language_trees && $scope.results.language_trees.length > 0) return;
+        if ($scope.tabs[2].active) {
+            list = $scope.results.societies.map(function(s) { return s.society.id});
+            society_ids = {'s': list};
+            $scope.results.language_trees = TreesFromSocieties.find(society_ids, sortTrees);
+        }
+    }
 
     if (!$scope.searchModel.results.searched && !$scope.searchModel.results.searchedByName) {
         var queryObject = $location.search();
@@ -88,11 +96,15 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
             $scope.results = FindSocieties.find(queryObject);
             $scope.searchModel.results.searchedByName = true;
         }
+        $scope.results = searchModelService.getModel().getResults();
+        $scope.query = searchModelService.getModel().getQuery();  
     } else {
-        assignGradient();
+        $scope.results = searchModelService.getModel().getResults();
+        $scope.query = searchModelService.getModel().getQuery();
         concatenateVariables();
+        assignGradient();
     }
-    
+        
     var sortTrees = function() {
         $scope.results.language_trees.phylogeny = [];
         $scope.results.language_trees.glottolog = [];
@@ -105,15 +117,6 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
                 $scope.results.language_trees.phylogeny.push(tree);
             }
         });
-    }
-    
-    $scope.addTrees = function() {
-        if ($scope.results.language_trees && $scope.results.language_trees.length > 0) return;
-        if ($scope.tabs[2].active) {
-            list = $scope.results.societies.map(function(s) { return s.society.id});
-            society_ids = {'s': list};
-            $scope.results.language_trees = TreesFromSocieties.find(society_ids, sortTrees);
-        }
     }
 
     var num_lines = 0;              
@@ -161,8 +164,15 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
                         .attr("version", 1.1)
                         .attr("xmlns", "http://www.w3.org/2000/svg")
                         .attr("height", function() {
-                            if ($scope.results.chosenVariable && $scope.results.environmental_variables.length > 0 && $scope.results.chosenVariable == $scope.results.environmental_variables[0]) return "500";
-                            else return "1500";
+                            if ($scope.results.chosenVariable && $scope.results.chosenVariable.variable.data_type.toLowerCase() == 'continuous') return "500";
+                            else if ($scope.results.chosenVariable) return "2000"
+                            else {
+                                if ($scope.results.classifications)
+                                    return $scope.results.classifications.length*35;
+                                else {
+                                    return $scope.results.geographic_regions.length*35;
+                                }
+                            }
                         })
                         .node().parentNode.innerHTML;
         map_svg = map_svg.substring(0, map_svg.indexOf("<div")); //remove zoom in/out buttons from map
@@ -173,56 +183,38 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
         
         //cultural and environmental variables
         if ($scope.results.chosenVariable) {
-            if ($scope.results.chosenVariable.type.toLowerCase() == 'environmental')
-                legend_svg = "<g transform='translate(0,350)'>"+d3.select(".env-legend-td").node().innerHTML+"</g>";
-            
-            else if ($scope.results.chosenVariable.type.toLowerCase() == 'cultural') {
-                if ($scope.results.chosenVariable.data_type.toLowerCase() == 'continuous') {
-                    legend_svg = "<g transform='translate(20,350)'>"+d3.select(".cont-gradient-td").node().innerHTML+"</g>";
-
-                } else {
-                    variable = $scope.results.variable_descriptions.filter(function(v) { return v.variable.id == $scope.results.chosenVariable.id; })
-                    if (variable.length > 0) {
-                        for (var c = 0; c < variable[0].codes.length; c++) {
-                            g = legend.append("svg:g")
-                                .attr("transform", function() {
-                                        return 'translate(20,'+((num_lines)*25)+')';
-                                });
-                                 g.append("svg:circle")
-                                .attr("cx", "10")
-                                .attr("cy", "10")
-                                .attr("r", "4.5")
-                                .attr("stroke", "#000")
-                                .attr("stroke-width", "0.5")
-                                .attr("fill", function() {
-                                    if (variable[0].codes[c].description.indexOf("Missing data") != -1)
-                                        return 'rgb(255,255,255)';
-                                    var value = variable[0].codes[c].code;
-                                    if (variable[0].variable.data_type.toUpperCase() == 'ORDINAL') {
-                                        rgb = colorMapService.generateRandomHue(value, variable[0].codes.length, variable[0].variable.id, 5);
-                                        return rgb;
-                                    }
-                                    
-                                    rgb = colorMapService.colorMap[parseInt(value)];
-                                    return rgb;
-                                });
-                            g.append("svg:text")
-                                .attr("x", "20")
-                                .attr("y", "15")
-                                .attr("style", "font-size: 14px;")
-                                .call($scope.wrapText, variable[0].codes[c].description);
-                            num_lines += 1;
-                            }
-                            legend_svg = "<g transform='translate(20,350)'>"+legend.node().innerHTML+"</g>";
+            if ($scope.results.chosenVariable.variable.data_type.toLowerCase() == 'continuous') {
+                legend_svg = "<g transform='translate(20,350)'>"+d3.select(".cont-gradient-td").node().innerHTML+"</g>";
+            } else {
+                for (var c = 0; c < $scope.results.chosenVariable.codes.length; c++) {
+                    g = legend.append("svg:g")
+                        .attr("transform", function() {
+                                return 'translate(20,'+((num_lines)*25)+')';
+                        });
+                         g.append("svg:circle")
+                        .attr("cx", "10")
+                        .attr("cy", "10")
+                        .attr("r", "4.5")
+                        .attr("stroke", "#000")
+                        .attr("stroke-width", "0.5")
+                        .attr("fill", function() {
+                            return $scope.results.chosenVariable.codes.codes[$scope.results.chosenVariable.codes[c].code];
+                        });
+                    g.append("svg:text")
+                        .attr("x", "20")
+                        .attr("y", "15")
+                        .attr("style", "font-size: 14px;")
+                        .call($scope.wrapText, $scope.results.chosenVariable.codes[c].description);
+                    num_lines += 1;
                     }
-                }
-
+                    legend_svg = "<g transform='translate(20,350)'>"+legend.node().innerHTML+"</g>";
             }
             var map_svg = map_svg.substring(0, map_svg.indexOf("</svg>"));
             // concat legend and remove all relative d-place links from svg's defs urls
             map_svg = map_svg.concat(legend_svg.replace(/url\(.*?#/, 'url(#').replace('ng-attr-fill', 'fill'));
             map_svg = map_svg.concat(gradients_svg +"</svg>");
-            var filename = $scope.results.chosenVariable.name.replace(/[\W]+/g, "-").toLowerCase()+"-map.svg";
+            map_svg = map_svg.replace(/&(?!amp;)/g, '&amp;');
+            var filename = $scope.results.chosenVariable.variable.name.replace(/[\W]+/g, "-").toLowerCase()+"-map.svg";
         }
         
         else if ($scope.results.classifications) {
@@ -240,9 +232,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
                     .attr("stroke", "#000")
                     .attr("stroke-width", "0.5")
                     .attr("fill", function() {
-                        var value = $scope.results.classifications[i].id;
-                        rgb = colorMapService.mapColor(value, $scope.results.classifications.length);
-                        return rgb;
+                       return $scope.results.classifications.codes[$scope.results.classifications[i].id];
                     });
                 g.append("svg:text")
                     .attr("x", "20")
@@ -254,6 +244,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
             var legend_svg = "<g transform='translate(0,350)'>"+legend.node().innerHTML+"</g>";
             var map_svg = map_svg.substring(0, map_svg.indexOf("</svg>"));
             map_svg = map_svg.concat(legend_svg+"</svg>");
+            map_svg = map_svg.replace(/&(?!amp;)/g, '&amp;');
             var filename = "language-classifications-map.svg";
 
         }
@@ -272,9 +263,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
                     .attr("stroke", "#000")
                     .attr("stroke-width", "0.5")
                     .attr("fill", function() {
-                        var value = $scope.results.geographic_regions[i].tdwg_code;
-                        rgb = colorMapService.mapColor(value, $scope.results.geographic_regions.length);
-                        return rgb;
+                       return $scope.results.geographic_regions.codes[$scope.results.geographic_regions[i].tdwg_code];
                     });
                 g.append("svg:text")
                     .attr("x", "20")
@@ -285,6 +274,7 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
             var legend_svg = "<g transform='translate(0,350)'>"+legend.node().innerHTML+"</g>";
             var map_svg = map_svg.substring(0, map_svg.indexOf("</svg>"));
             map_svg = map_svg.concat(legend_svg+"</svg>");
+            map_svg = map_svg.replace(/&(?!amp;)/g, '&amp;');
             var filename = "geographic-regions-map.svg";
         }
         
@@ -323,33 +313,44 @@ function SocietiesCtrl($scope, $location, $timeout, $http, searchModelService, c
             leg = d3.select(this);
             if (leg.attr("var-id") && leg.attr("class").indexOf("hide") == -1) {
                 all_legends[leg.attr("var-id")] = leg;
-            }
+            }   
         });
+        
+        if ($scope.results.variable_descriptions.length + $scope.results.environmental_variables.length > 0) {
                     
-        for (var i = 0; i < $scope.results.variable_descriptions.length; i++) {
-            id = $scope.results.variable_descriptions[i].variable.id;
-            name = ''
-            if (!all_legends[id]) continue;
-            legend_id = all_legends[id];
-            if ($scope.results.variable_descriptions[i].CID) name += $scope.results.variable_descriptions[i].CID + '-';
-            name += $scope.results.variable_descriptions[i].variable.name;
-            svg_string = legend_id.node().innerHTML.replace(/url\(.*?#/, 'url(#');
-            svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">' + svg_string + gradients_svg + '</svg>';
-            legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': svg_string});    
+            for (var i = 0; i < $scope.results.variable_descriptions.length; i++) {
+                id = $scope.results.variable_descriptions[i].variable.id;
+                name = ''
+                if (!all_legends[id]) continue;
+                legend_id = all_legends[id];
+                if ($scope.results.variable_descriptions[i].CID) name += $scope.results.variable_descriptions[i].CID + '-';
+                name += $scope.results.variable_descriptions[i].variable.name;
+                svg_string = legend_id.node().innerHTML.replace(/url\(.*?#/, 'url(#').replace(/&(?!amp;)/g, '&amp;');
+                svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">' + svg_string + gradients_svg + '</svg>';
+                legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': svg_string});    
+            }
+                    
+            for (var i = 0; i < $scope.results.environmental_variables.length; i++) {
+                id = $scope.results.environmental_variables[i].variable.id;
+                name = ''
+                if (!all_legends[id]) continue;
+                legend_id = all_legends[id];
+                if ($scope.results.environmental_variables[i].CID) name += $scope.results.environmental_variables[i].CID + '-';
+                name += $scope.results.environmental_variables[i].variable.name;
+                svg_string = legend_id.node().innerHTML.replace(/url\(.*?#/, 'url(#').replace(/&(?!amp;)/g, '&amp;');
+                svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">'+svg_string + gradients_svg + '</svg>';
+                legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': svg_string});
+            }
+        } else if ($scope.results.classifications) {
+            svg_string = d3.select(".classif-legends").node().innerHTML.replace(/&(?!amp;)/g, '&amp;');
+            svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)" height="'+$scope.results.classifications.length*35+'">'+svg_string  + '</svg>';
+            legends_list.push({'name': 'lang-classifications-legend.svg', 'svg': svg_string});
+        } else if ($scope.results.geographic_regions) {
+            svg_string = d3.select(".region-legends").node().innerHTML.replace(/&(?!amp;)/g, '&amp;');
+            svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)" height="'+$scope.results.geographic_regions.length*35+'">'+svg_string  + '</svg>';
+            legends_list.push({'name': 'geographic-regions-legend.svg', 'svg': svg_string});
         }
-                
-        for (var i = 0; i < $scope.results.environmental_variables.length; i++) {
-            id = $scope.results.environmental_variables[i].id;
-            name = ''
-            if (!all_legends[id]) continue;
-            legend_id = all_legends[id];
-            if ($scope.results.environmental_variables[i].CID) name += $scope.results.environmental_variables[i].CID + '-';
-            name += $scope.results.environmental_variables[i].name;
-            svg_string = legend_id.node().innerHTML;
-            svg_string = svg_string.replace(/url\(.*?#/, 'url(#');
-            svg_string = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" transform="translate(10, 10)">'+svg_string + gradients_svg + '</svg>';
-            legends_list.push({'name': name.replace(/[\W]+/g, "-")+'-legend.svg', 'svg': svg_string});
-        }
+
 
         $scope.toSendquery = {'l': legends_list, 't': [tree_svg], 'n': [$scope.results.selectedTree.name+'.svg']};
         $scope.toSendquery = JSON.stringify($scope.toSendquery);

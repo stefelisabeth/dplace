@@ -245,7 +245,7 @@ class SocietyResultSetSerializer(serializers.Serializer):
     # variable descriptions -> variable codes
     variable_descriptions = VariableCodeSerializer(many=True)
     # environmental variables -> environmental values
-    environmental_variables = VariableSerializer(many=True)
+    environmental_variables = VariableCodeSerializer(many=True)
     sources = SourceSerializer(many=True)
     # languages - Does not map to a more specific value
     languages = LanguageSerializer(many=True)

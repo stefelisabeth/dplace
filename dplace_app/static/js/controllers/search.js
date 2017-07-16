@@ -215,6 +215,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                searchParams[propertyName].selectedVariables.forEach(function(variable) {
                    filters = [];
                     selectedVariable = (propertyName == 'culturalTraits') ? variable : variable.selectedVariable;
+                    if (!selectedVariable) return;
                    if (selectedVariable.data_type.toLowerCase() == 'continuous') {
                        filters = [
                         selectedVariable.id,

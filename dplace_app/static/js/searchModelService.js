@@ -36,10 +36,10 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
         societies = results.societies;         
         for (var i = 0; i < results.environmental_variables.length; i++) {
             results.environmental_variables[i].CID = "E"+(i+1);
-            if (results.environmental_variables[i].data_type != 'Continuous') continue;
+            if (results.environmental_variables[i].variable.data_type != 'Continuous') continue;
             extractedValues = societies.map(function(society) { 
                 for (var j = 0; j < society.environmental_values.length; j++) {
-                    if (society.environmental_values[j].variable == results.environmental_variables[i].id) {
+                    if (society.environmental_values[j].variable == results.environmental_variables[i].variable.id) {
                         if (society.environmental_values[j].coded_value_float) return society.environmental_values[j].coded_value_float;
                     }
                 }
@@ -77,9 +77,43 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
             })
         }   
         results = calculateRange(results);
-        var colorMap = colorMapService.generateColorMap(results);
+        results = colorMapService.generateColorMap(results);
+        
+        //color circles for table.html
         results.societies.forEach(function(container) {
-            container.society.style = {'background-color': colorMap[container.society.id] };
+            if (container.variable_coded_values.length > 0) {
+                for (var i = 0; i < results.variable_descriptions.length; i++) {
+                    if (results.variable_descriptions[i].variable.id == container.variable_coded_values[0].variable) {
+                        if (results.variable_descriptions[i].variable.data_type.toLowerCase() == 'continuous') {
+                            container.society.style = {'background-color': container.variable_coded_values[0].color};
+                            break;
+                        } else {
+                            container.society.style = {'background-color': results.variable_descriptions[i].codes.codes[container.variable_coded_values[0].coded_value]};
+                            break;
+                        }
+                    }
+                }
+
+            } else if (container.environmental_values.length > 0) {
+                for (var i = 0; i < results.environmental_variables.length; i++) {
+                    if (results.environmental_variables[i].variable.id == container.environmental_values[0].variable) {
+                        if (results.environmental_variables[i].variable.data_type.toLowerCase() == 'continuous') {
+                            container.society.style = {'background-color': container.environmental_values[0].color};
+                            break;
+                        }
+                         else {
+                            container.society.style = {'background-color': results.environmental_variables[i].codes.codes[container.environmental_values[0].coded_value]};
+                            break;
+                        }
+                    }
+                }
+            } else if (results.classifications) {
+                if (container.society.language)
+                    container.society.style = {'background-color': results.classifications.codes[container.society.language.family.id]};
+            } else {
+                container.society.style = {'background-color': results.geographic_regions.codes[container.society.region.tdwg_code]};
+            }
+ 
         });
     }
     

@@ -60,31 +60,57 @@ describe('Color Map Service Testing', function() {
         society.society.region = geographic_region;
         mockResults.geographic_regions.push(geographic_region);
         mockResults.societies.push(society);
-        var map = mockColorService.generateColorMap(mockResults);
-        expect(map[society.society.id]).toBe('rgb(255,0,0)');
+        var results = mockColorService.generateColorMap(mockResults);
+        expect(results.geographic_regions.codes).toBeDefined();
+        expect(results.geographic_regions.codes[geographic_region.tdwg_code]).toBe('rgb(255,0,0)');
     });
     
     it('environmental color map', function() {
         var environmental_variable = {
-            'id': 317,
-            'max': 29,
             'min': -17,
-            'name': "Temperature",
-            'range': 46,
-            'data_type': 'Continuous',
-            'type': 'environmental'
+            'max': 29,
+            'variable': {
+                'id': 317,
+                'name': "Temperature",
+                'data_type': 'Continuous',
+                'type': 'environmental'
+            },
+            'codes': []
         };
         
         var environmental_value = {
             'coded_value_float': 18.25,
             'variable': 317,
         };
+        
+        var categorical_env_variable = {
+            'codes': [
+                {'code': 'NA', 'description': 'Missing data'},
+                {'code': '1', 'description': 'Biome 1'},
+                {'code': '2', 'description': 'Biome 2'},
+                {'code': '3', 'description': "Biome 3"},
+                {'code': '4', 'description': "Biome 4"},
+            ],
+            'variable': {
+                'id': 318,
+                'data_type': 'Categorical', 
+                'type': 'environmental',
+                'name': 'Biome'
+            }
+            
+        }
         mockResults.environmental_variables.push(environmental_variable);
+        mockResults.environmental_variables.push(categorical_env_variable);
         society.environmental_values.push(environmental_value);
         mockResults.societies.push(society);
-        var map = mockColorService.generateColorMap(mockResults);
-        expect(map[society.society.id]).toBe('rgb(255,238,0)');
-    
+        var results = mockColorService.generateColorMap(mockResults);
+        expect(results.societies[0].environmental_values[0].color).toBe('rgb(255,238,0)');
+        expect(results.environmental_variables[1].codes.codes).toBeDefined();
+        expect(results.environmental_variables[1].codes.codes['NA']).toBe('rgb(255,255,255)');
+        expect(results.environmental_variables[1].codes.codes[1]).toBe('rgb(0,204,255)');
+        expect(results.environmental_variables[1].codes.codes[2]).toBe('rgb(0,255,102)');
+        expect(results.environmental_variables[1].codes.codes[3]).toBe('rgb(102,255,0)');
+        expect(results.environmental_variables[1].codes.codes[4]).toBe('rgb(255,204,0)');
     });
     
     it('cultural variable map', function() {
@@ -98,7 +124,25 @@ describe('Color Map Service Testing', function() {
             ],
             'variable': {
                 'id': 1628,
-                'data_type': 'Categorical'
+                'data_type': 'Categorical',
+                'type': 'cultural',
+                'name': 'Slavery'
+            }
+        };
+        
+        var variable_description_2 = {
+            'codes': [
+                {'code': 'NA', 'description': 'Missing data'},
+                {'code': '21', 'description': 'Absence of slavery'},
+                {'code': '22', 'description': 'Incipient or nonhereditary slavery, i.e., where slave status is temporary and not transmitted to the children of slaves'},
+                {'code': '23', 'description': "Slavery reported but not identified as hereditary or nonhereditary"},
+                {'code': '24', 'description': "Hereditary slavery present and of at least modest social significance"},
+            ],
+            'variable': {
+                'id': 1628,
+                'data_type': 'Categorical',
+                'type': 'cultural',
+                'name': 'Slavery'
             }
         };
         
@@ -114,15 +158,51 @@ describe('Color Map Service Testing', function() {
             'code_description': variable_description.codes[0]
         };
         
+        var continuous_variable = {
+            'min': 0,
+            'max': 1000,
+            'variable': {
+                'id': 66,
+                'name': "Population",
+                'data_type': 'Continuous',
+                'type': 'cultural'
+            },
+            'codes': []
+        };
+        var coded_float = {
+            'coded_value_float': 250,
+            'coded_value': 250,
+            'variable': 66
+        };
+        
+        var coded_float_2 = {
+            'coded_value_float': 11,
+            'coded_value': 11,
+            'variable': 66
+        };
+        
         mockResults.variable_descriptions.push(variable_description);
+        mockResults.variable_descriptions.push(continuous_variable);
+        mockResults.variable_descriptions.push(variable_description_2);
         society.variable_coded_values.push(coded_value);
         society2.variable_coded_values.push(coded_value_na);
+        society2.variable_coded_values.push(coded_float);
+        society.variable_coded_values.push(coded_float_2);
         mockResults.societies.push(society);
         mockResults.societies.push(society2);
-        var map = mockColorService.generateColorMap(mockResults);
-        expect(map[society.society.id]).toEqual('rgb(228,26,28)');
-        expect(map[society2.society.id]).toEqual('rgb(255,255,255)'); 
+        var results = mockColorService.generateColorMap(mockResults);
+        expect(results.variable_descriptions[0].codes.codes).toBeDefined();
+        expect(results.variable_descriptions[1].codes.codes).not.toBeDefined();
+        expect(results.variable_descriptions[2].codes.codes).toBeDefined()
+        expect(results.variable_descriptions[0].codes.codes[1]).toEqual('rgb(228,26,28)');
+        expect(results.variable_descriptions[0].codes.codes['NA']).toEqual('rgb(255,255,255)'); 
+        expect(results.variable_descriptions[0].codes.codes[2]).toEqual('rgb(69,117,180)');
+        expect(results.variable_descriptions[0].codes.codes[3]).toEqual('rgb(77,146,33)');
+        expect(results.variable_descriptions[0].codes.codes[4]).toEqual('rgb(152,78,163)');
+        expect(results.variable_descriptions[2].codes.codes[21]).toEqual('rgb(69,117,180)');
+        expect(results.variable_descriptions[2].codes.codes[24]).toEqual('rgb(255,127,0)');
     });
+    
     
     it('should use monochromatic scale for ordinal variables', function() {
         var variable_description = {
@@ -134,7 +214,8 @@ describe('Color Map Service Testing', function() {
             ],
             'variable': {
                 'id': 1934,
-                'data_type': 'Ordinal'
+                'data_type': 'Ordinal',
+                'type': 'cultural'
             }
         };
         
@@ -147,10 +228,11 @@ describe('Color Map Service Testing', function() {
         mockResults.variable_descriptions.push(variable_description);
         society.variable_coded_values.push(coded_value);
         mockResults.societies.push(society);
-        var map = mockColorService.generateColorMap(mockResults);
+        var results = mockColorService.generateColorMap(mockResults);
         //check to make sure it isn't assigning the color from colorMap
-        expect(map[society.society.id]).not.toEqual('rgb(228,26,28)'); 
-        expect(map[society.society.id]).toEqual('rgb(97,222,97)');
+        expect(results.variable_descriptions[0].codes.codes).toBeDefined();
+        expect(results.variable_descriptions[0].codes.codes[1]).not.toEqual('rgb(228,26,28)');
+        expect(results.variable_descriptions[0].codes.codes[1]).toEqual('rgb(97,222,97)');
     
     });
     
@@ -216,14 +298,15 @@ describe('Color Map Service Testing', function() {
             }
         ];
         
-        var map = mockColorService.generateColorMap(mockResults);
-       expect(map[society.society.id]).toBe("rgb(255,0,0)");
-       expect(map[society2.society.id]).toBe("rgb(0,255,0)");
-       expect(map[society2.society.id]).toEqual(map[society3.society.id]);
+        var results = mockColorService.generateColorMap(mockResults);
+        expect(results.classifications.codes).toBeDefined();
+        expect(results.classifications.codes[society.society.language.family.id]).toBe("rgb(255,0,0)");
+        expect(results.classifications.codes[society2.society.language.family.id]).toBe('rgb(0,255,0)');
+        expect(results.classifications.codes[society2.society.language.family.id]).toEqual(results.classifications.codes[society3.society.language.family.id]);
     });
     
     it('geographic regions and languages color map', function() {
-        //when searching by geographic region and language family, marker should be colored according to language family
+        //when searching by geographic region and language family, should get colors for both but display only language family in directives.js
         var geographic_region = {
             'continent': "AFRICA",
             'count': 71,
@@ -262,49 +345,11 @@ describe('Color Map Service Testing', function() {
             }
         ];
      mockResults.societies.push(society);
-    var map = mockColorService.generateColorMap(mockResults);
-    expect(map[society.society.id]).toEqual("rgb(255,0,0)")
-    });
-    
-    it('geographic region and cultural variable', function() {
-        //should color by cultural variable 
-        var geographic_region = {
-            'continent': "AFRICA",
-            'count': 71,
-            'id': 7398,
-            'level_2_re': 24,
-            'region_nam': "Northeastern Africa",
-            'tdwg_code': 24
-        };
-        
-        var variable_description = {
-            'codes': [
-                {'code': 'NA', 'description': 'Missing data'},
-                {'code': '1', 'description': 'Absence of slavery'},
-                {'code': '2', 'description': 'Incipient or nonhereditary slavery, i.e., where slave status is temporary and not transmitted to the children of slaves'},
-                {'code': '3', 'description': "Slavery reported but not identified as hereditary or nonhereditary"},
-                {'code': '4', 'description': "Hereditary slavery present and of at least modest social significance"},
-            ],
-            'variable': {
-                'id': 1628,
-                'data_type': 'Categorical'
-            }
-        };
-        
-        var coded_value = {
-            'coded_value': '1',
-            'variable': 1628,
-            'code_description': variable_description.codes[1]
-        };
-        society.geographic_regions.push(geographic_region);
-        mockResults.geographic_regions.push(geographic_region);
-        mockResults.variable_descriptions.push(variable_description);
-        society.variable_coded_values.push(coded_value);
-        mockResults.societies.push(society);
-        
-        var map = mockColorService.generateColorMap(mockResults);
-        expect(map[society.society.id]).toEqual('rgb(228,26,28)');
-    
+    var results = mockColorService.generateColorMap(mockResults);
+    expect(results.classifications.codes).toBeDefined();
+    expect(results.geographic_regions.codes).toBeDefined();
+    expect(results.classifications.codes[society.society.language.family.id]).toBe('rgb(255,0,0)');
+    expect(results.geographic_regions.codes[geographic_region.tdwg_code]).toBe('rgb(255,0,0)');
     });
 
 });
