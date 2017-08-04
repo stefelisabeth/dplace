@@ -51,9 +51,15 @@ class DPLACECSVResults(object):
         }
 
     def field_names_for_environmental_variable(self, variable):
+        header = variable['variable']['name']
+        unit = variable['variable']['units']
+        if len(unit) > 0:
+            header = header + " (%s)" % unit
         return {
-            'name': "Variable: %s (%s)" % (variable['name'], variable['units']),
-            'comments': "Comment: %s (%s)" % (variable['name'], variable['units'])
+            'name': "Variable: %s" % header,
+            'description': "Description: %s" % header,
+            'comments': "Comment: %s" % header,
+
         }
 
     def parse(self):
@@ -78,12 +84,19 @@ class DPLACECSVResults(object):
             self.field_map['environmental_variables'] = dict()
             for v in self.data['environmental_variables']:
                 field_names = self.field_names_for_environmental_variable(v)
-                self.field_map['environmental_variables'][v['id']] = field_names
+                self.field_map['environmental_variables'][v['variable']['id']] = field_names
                 self.field_names.append(field_names['name'])
+                self.field_names.append(field_names['description'])
                 self.field_names.append(field_names['comments'])
 
     def flatten(self):
         # data is a dictionary with a list of societies
+        print self.data
+        # create dict containing all sources, key=source_id, value=short name
+        refs = dict()
+        for item in self.data.get('sources', []):
+            refs[item['id']] = item['name']
+
         for item in self.data.get('societies', []):
             row = dict()
             # Merge in society data
@@ -130,6 +143,9 @@ class DPLACECSVResults(object):
                         description = cultural_trait_value['code_description'].get('description', '')
                     else:  # pragma: no cover
                         description = ""
+                    # reverse 'references' list to be sorted alphabetically
+                    refArray = cultural_trait_value['references']
+                    refArray.reverse()
                     extra_rows.append(dict({
                         'Preferred society name': society['name'],
                         'Society id': society['ext_id'],
@@ -158,9 +174,12 @@ class DPLACECSVResults(object):
                         field_names['focal_year']: cultural_trait_value['focal_year'],
                         field_names['comments']: cultural_trait_value['comment'],
                         field_names['subcase']: cultural_trait_value['subcase'],
-                        field_names['sources']: ''.join(
-                            [x['author'] + '(' + x['year'] + '); '
-                             for x in cultural_trait_value['references']])
+                        # add sources as short name and, if given, plus page numbers
+                        ## reverse 'references' list to be sorted alphabetically
+                        field_names['sources']: '; '.join([
+                            (refs[x['source']].replace(')', ':'+x['pages']+')'), refs[x['source']])[len(x['pages'])==0]
+                            for x in refArray
+                        ])
                     }))
                     continue
 
@@ -175,18 +194,26 @@ class DPLACECSVResults(object):
                         row[field_names['description']] = ''
                 
                 row[field_names['comments']] = cultural_trait_value['comment']
-                row [field_names['subcase']] = cultural_trait_value['subcase']
-                row[field_names['sources']] = ''.join([
-                    x['author'] + '(' + x['year'] + '); '
-                    for x in cultural_trait_value['references']
+                row[field_names['subcase']] = cultural_trait_value['subcase']
+
+                # add sources as short name and, if given, plus page numbers
+                ## reverse 'references' list to be sorted alphabetically
+                refArray = cultural_trait_value['references']
+                refArray.reverse()
+                row[field_names['sources']] = '; '.join([
+                    (refs[x['source']].replace(')', ':'+x['pages']+')'), refs[x['source']])[len(x['pages'])==0]
+                    for x in refArray
                 ])
             # environmental
             environmental_values = item['environmental_values']
+            print environmental_values
             for environmental_value in environmental_values:
                 variable_id = environmental_value['variable']
                 field_names = self.field_map['environmental_variables'][variable_id]
-                row[field_names['name']] = environmental_value['value']
+                row[field_names['name']] = environmental_value['coded_value']
                 row[field_names['comments']] = environmental_value['comment']
+                if environmental_value['code_description'] and environmental_value['code_description']['description']:
+                    row[field_names['description']] = environmental_value['code_description']['description']
             # language - already have
             #
             self.rows.append(row)
