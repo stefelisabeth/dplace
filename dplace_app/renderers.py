@@ -139,7 +139,7 @@ class DPLACECSVResults(object):
                 variable_id = cultural_trait_value['variable']
                 field_names = self.field_map['variable_descriptions'][variable_id]
                 if field_names['code'] in row:
-                    if 'code_description' in cultural_trait_value:
+                    if 'code_description' in cultural_trait_value and cultural_trait_value['code_description']:
                         description = cultural_trait_value['code_description'].get('description', '')
                     else:  # pragma: no cover
                         description = ""
