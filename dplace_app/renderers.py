@@ -53,7 +53,7 @@ class DPLACECSVResults(object):
     def field_names_for_environmental_variable(self, variable):
         header = variable['name']
         unit = variable['units']
-        if len(unit) > 0:
+        if len(unit):
             header = header + " (%s)" % unit
         return {
             'name': "Variable: %s" % header,
