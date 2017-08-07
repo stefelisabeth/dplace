@@ -51,8 +51,8 @@ class DPLACECSVResults(object):
         }
 
     def field_names_for_environmental_variable(self, variable):
-        header = variable['variable']['name']
-        unit = variable['variable']['units']
+        header = variable['name']
+        unit = variable['units']
         if len(unit) > 0:
             header = header + " (%s)" % unit
         return {
@@ -91,7 +91,6 @@ class DPLACECSVResults(object):
 
     def flatten(self):
         # data is a dictionary with a list of societies
-        print self.data
         # create dict containing all sources, key=source_id, value=short name
         refs = dict()
         for item in self.data.get('sources', []):
@@ -206,7 +205,6 @@ class DPLACECSVResults(object):
                 ])
             # environmental
             environmental_values = item['environmental_values']
-            print environmental_values
             for environmental_value in environmental_values:
                 variable_id = environmental_value['variable']
                 field_names = self.field_map['environmental_variables'][variable_id]
