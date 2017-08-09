@@ -164,7 +164,7 @@ $(document).ready(function(){
     {% endif %}
         <h4>Alternate names: {{ society.alternate_names }}</h4>
         <h4>Principal year to which data refer: {{ society.focal_year }}</h4>
-        {% if xd_id %}
+        {% if xd_id or society.hraf_link or society.chirila_link %}
             <h4>Name and ID in other cross-cultural databases:</h4>
             <h5><ul style="line-height:25px;">
             {% for x in society.related %}
