@@ -1,5 +1,6 @@
 from rest_framework import renderers
 from clldutils.dsv import UnicodeWriter
+import re
 
 CSV_PREAMBLE = """
 Research that uses data from D-PLACE should cite both the original source(s) of
@@ -22,6 +23,8 @@ class DPLACECSVResults(object):
             'Society id',
             'Cross-dataset id',
             'Original society name',
+            'eHRAF name',
+            'eHRAF code',
             'Revised latitude',
             'Revised longitude',
             'Original latitude',
@@ -105,6 +108,9 @@ class DPLACECSVResults(object):
             row['Society id'] = society['ext_id']
             row['Cross-dataset id'] = society['xd_id']
             row['Original society name'] = society['original_name']
+            if len(society['hraf_link']):
+                row['eHRAF name'] = re.sub('\s*\(.*$', '', society['hraf_link'])
+                row['eHRAF code'] = re.sub(r'^.*?\((.*?)\).*$', '\\1', society['hraf_link'])
             row['Revised longitude'] = "" if society['location'] is None \
                 else society['location']['coordinates'][0]
             row['Revised latitude'] = "" if society['location'] is None \
@@ -145,11 +151,18 @@ class DPLACECSVResults(object):
                     # reverse 'references' list to be sorted alphabetically
                     refArray = cultural_trait_value['references']
                     refArray.reverse()
+                    eHRAF_name = ''
+                    eHRAF_code = ''
+                    if len(society['hraf_link']):
+                        eHRAF_name = re.sub('\s*\(.*$', '', society['hraf_link'])
+                        eHRAF_code = re.sub(r'^.*?\((.*?)\).*$', '\\1', society['hraf_link'])
                     extra_rows.append(dict({
                         'Preferred society name': society['name'],
                         'Society id': society['ext_id'],
                         'Cross-dataset id': society['xd_id'],
                         'Original society name': society['original_name'],
+                        'eHRAF name': eHRAF_name,
+                        'eHRAF code': eHRAF_code,
                         'Revised longitude': "" if society['location'] is None \
                             else society['location']['coordinates'][0],
                         'Revised latitude': "" if society['location'] is None \

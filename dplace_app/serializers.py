@@ -123,6 +123,7 @@ class SocietySerializer(serializers.ModelSerializer):
             'id',
             'ext_id',
             'xd_id',
+            'hraf_link',
             'name',
             'original_name',
             'alternate_names',
