@@ -19,7 +19,7 @@ class DPLACECSVResultsTestCase(TestCase):
             assert fieldnames[k].endswith(expected)
     
     def test_field_names_for_environmental_variable(self):
-        name = self.renderer.field_names_for_environmental_variable(self.var)
+        name = self.renderer.field_names_for_environmental_variable({'variable': self.var})
         assert name['name'] == 'Variable: %s (%s)' % (self.var['name'], self.var['units'])
 
 

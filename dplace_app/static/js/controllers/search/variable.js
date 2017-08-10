@@ -90,7 +90,8 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, DatasetSo
                 else if (variable.type == 'environmental') $scope.searchModel.getEnvironmentalData().badgeValue = $scope.variables.map(function(v) { return v.selectedVariable; }).length;
             }
         } else {
-            $scope.removeFromSearch(code, variable.type);        
+            code.type = variable.type == 'cultural' ? 'c' : 'e'
+            $scope.removeFromSearch(code, 'code');        
         }
         if (variable.selected.length == variable.codes.length) variable.allSelected = true;
         else variable.allSelected = false;
