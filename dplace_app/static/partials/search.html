@@ -63,7 +63,7 @@
                             <a ng-click="removeFromSearch(variable, 'variable')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ variable.name }}
                             <ul class="criteria-list">
                                 <li ng-repeat="code in variable.selected">
-                                    <a ng-click="removeFromSearch(code, 'cultural')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
+                                    <a ng-click="code.type ='c'; removeFromSearch(code, 'code')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
                                 </li>
                             </ul>
                         </li>
@@ -72,6 +72,11 @@
                        <ul id="scEnv" class="list-unstyled criteria-list collapse in" style="padding-left:10px;">
                             <li ng-repeat="variable in searchModel.params.environmentalData.selectedVariables" ng-show="variable.selectedVariable">
                                 <a ng-click="removeFromSearch(variable, 'environmental')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{variable.selectedVariable.name}}
+                                <ul class="criteria-list">
+                                    <li ng-repeat="code in variable.selectedVariable.selected">
+                                        <a ng-click="code.type ='e'; removeFromSearch(code, 'code')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
+                                    </li>
+                                </ul>
                             </li>
                         </ul>
                 </div>

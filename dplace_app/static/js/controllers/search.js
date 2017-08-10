@@ -140,7 +140,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     }
                 }
                 break;
-            case 'cultural':        
+          /*  case 'cultural':        
                 if ($scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.variable) != -1) {
                     object.isSelected = false;
                     variable = $scope.searchModel.getCulturalTraits().selectedVariables[$scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.variable)];
@@ -150,7 +150,26 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                         variable.allSelected = false;
                         $scope.searchModel.getCulturalTraits().badgeValue--;
                     }
+                }*/
+            case 'code':
+                object.isSelected = false;
+                if (object.type == 'c' && $scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.variable) != -1) {
+                    variable = $scope.searchModel.getCulturalTraits().selectedVariables[$scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.variable)];
+                    index = variable.selected.map(function(v) { return v.id; }).indexOf(object.id);
+                    if (index > -1) {
+                        variable.selected.splice(index, 1);
+                        variable.allSelected = false;
+                        $scope.searchModel.getCulturalTraits().badgeValue--;
+                    }
+                } else if (object.type == 'e' && $scope.searchModel.getEnvironmentalData().selectedVariables.map(function(v) { return v.selectedVariable.id; }).indexOf(object.variable) != -1) {
+                    variable = $scope.searchModel.getEnvironmentalData().selectedVariables.filter(function(v) { return v.selectedVariable.id == object.variable; })[0];
+                    index = variable.selectedVariable.selected.map(function(v) { return v.id;}).indexOf(object.id);
+                    if (index > -1) {
+                        variable.selectedVariable.selected.splice(index, 1);
+                        variable.selectedVariable.allSelected = false;
+                    }
                 }
+                break;
             case 'variable':
                index = $scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.id);
                if (index > -1) {
