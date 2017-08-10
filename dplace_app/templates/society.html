@@ -164,7 +164,7 @@ $(document).ready(function(){
     {% endif %}
         <h4>Alternate names: {{ society.alternate_names }}</h4>
         <h4>Principal year to which data refer: {{ society.focal_year }}</h4>
-        {% if xd_id %}
+        {% if xd_id or society.hraf_link or society.chirila_link %}
             <h4>Name and ID in other cross-cultural databases:</h4>
             <h5><ul style="line-height:25px;">
             {% for x in society.related %}
@@ -319,6 +319,9 @@ $(document).ready(function(){
                         <a target="_bank" title="D-PLACE Data" href="https://github.com/D-PLACE/dplace-data">
                             <img height="29" src="/static/images/GitHub_Logo_data.png" /></a>
                     </td>
+                    <td align="right" style="padding-left:10px;padding-right:5px;">
+                      <a target="_bank" title="Imprint" href="/legal">§&nbsp;Imprint</a>
+                    </td>
                 </tr>
             </table>
         </center>
@@ -333,6 +336,8 @@ $(document).ready(function(){
             &nbsp;&nbsp;&nbsp;
             <a target="_bank" href="https://github.com/D-PLACE/dplace"><img style="width:30px" src="/static/images/GitHub_Logo_code.png" /></a>
             <a target="_bank" href="https://github.com/D-PLACE/dplace-data"><img style="width:30px" src="/static/images/GitHub_Logo_data.png" /></a>
+            &nbsp;&nbsp;&nbsp;
+            <a target="_bank" title="Imprint" href="/legal">§&nbsp;Imprint</a>
         </center>
     </div>
 {% endverbatim %}
