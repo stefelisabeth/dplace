@@ -245,7 +245,7 @@ class Test(APITestCase):
             
     def test_find_society_by_continuous_var_gt(self):
         response = self.get_results(
-            c=[[Variable.objects.get(label='2').id, 'gt', ['60']]])
+            c=[[Variable.objects.get(label='2').id, 'gt', ['60', '0']]])
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society2'), response))
         self.assertFalse(
@@ -253,7 +253,7 @@ class Test(APITestCase):
     
     def test_find_society_by_continuous_var_lt(self):
         response = self.get_results(
-            c=[[Variable.objects.get(label='2').id, 'lt', ['60']]])
+            c=[[Variable.objects.get(label='2').id, 'lt', ['0','60']]])
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
         self.assertFalse(
@@ -300,7 +300,7 @@ class Test(APITestCase):
 
     def test_find_by_environmental_filter_gt(self):
         response = self.get_results(
-            e=[[Variable.objects.get(name='Rainfall').id, 'gt', ['1.5']]])
+            e=[[Variable.objects.get(name='Rainfall').id, 'gt', ['1.5', '0.0']]])
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society2'), response))
         self.assertFalse(
@@ -309,7 +309,7 @@ class Test(APITestCase):
     def test_find_by_environmental_filter_lt(self):
         response = self.get_results(
             e=[[Variable.objects.get(name='Rainfall').id,
-                'lt', ['1.5']]])
+                'lt', ['0.0', '1.5']]])
         self.assertTrue(
             self.society_in_results(Society.objects.get(ext_id='society1'), response))
         self.assertFalse(
