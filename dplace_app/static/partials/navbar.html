@@ -34,20 +34,20 @@ $(document).ready(function(){
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 			<ul class="nav navbar-nav navbar-right">
 				<li ng-class="searchActive" class="searchActive">
-					<a ng-href href="/search">
+					<a ng-href="/search">
 						<img class="navicon" src="/static/images/Search_Icon.png">
 						<span class="navIsNotCollapsedInline"><br/></span>SEARCH
 					</a>
 				</li>
 				<li ng-show="model.results.societies.length > 0" ng-class="societiesActive" class="societiesActive">
-					<a ng-href href="/societies">
+					<a ng-href="/societies">
 						<img class="navicon" src="/static/images/Results_Icon.png">
 						<span class="navIsNotCollapsedInline"><br/></span>RESULTS 
 							<span ng-show="model.results.societies.length">({{ model.results.societies.length }})</span>
 					</a>
 				</li>
 				<li ng-class="sourceInfoActive" class="sourceInfoActive">
-					<a ng-href href="/howto">
+					<a ng-href="/howto">
 						<img class="navicon" src="/static/images/DataSet_Icon.png">
 						<span class="navIsNotCollapsedInline"><br/></span>HOW-TO
 					</a>
@@ -58,14 +58,14 @@ $(document).ready(function(){
 						<span class="navIsNotCollapsedInline"><br/></span>INFO
 					</a>
 					<ul class="dropdown-menu" role="menu">
-						<li><a ng-href href="/about">ABOUT</a></li>
-						<li><a ng-href href="&#x00006d;ailto:dplace&#64;shh&#46;mpg&#46;de" title="Send email to dplace&#64;shh&#46;mpg&#46;de" data-toggle="tooltip" data-placement="top">CONTACT US</a></li>
-						<li><a ng-href href="/howtocite">HOW TO CITE</a></li>
-						<li><a ng-href href="/source">DATA SOURCES</a></li>
-						<li><a ng-href href="/team">TEAM</a></li>
-						<li><a ng-href href="/technology">TECHNOLOGY</a></li>
-						<li><a ng-href href="/publication">PUBLICATIONS</a></li>
-						<li><a ng-href href="/legal">LEGAL</a></li>
+						<li><a ng-href="/about">ABOUT</a></li>
+						<li><a ng-href="&#x00006d;ailto:dplace&#64;shh&#46;mpg&#46;de" title="Send email to dplace&#64;shh&#46;mpg&#46;de" data-toggle="tooltip" data-placement="top">CONTACT US</a></li>
+						<li><a ng-href="/howtocite">HOW TO CITE</a></li>
+						<li><a ng-href="/source">DATA SOURCES</a></li>
+						<li><a ng-href="/team">TEAM</a></li>
+						<li><a ng-href="/technology">TECHNOLOGY</a></li>
+						<li><a ng-href="/publication">PUBLICATIONS</a></li>
+						<li><a ng-href="/legal">LEGAL</a></li>
 					</ul>
 				</li>
 			</ul>

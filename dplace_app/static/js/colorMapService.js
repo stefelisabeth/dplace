@@ -101,14 +101,13 @@ function ColorMapService() {
     }
 
     this.generateColorMap = function(results) {
-        
         // assigns a color to each code for categorical/ordinal variables. Stores in .codes as code: {name, color}
         var new_codes = {}
         for (var i = 0; i < results.geographic_regions.length; i++) {
             new_codes[results.geographic_regions[i].tdwg_code] = this.mapColor(i, results.geographic_regions.length);
         }
         results.geographic_regions.codes = new_codes;
-        
+
         if (results.classifications) {
             new_codes = {}
             for (var i = 0; i < results.classifications.length; i++) {

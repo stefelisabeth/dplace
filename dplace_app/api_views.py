@@ -222,7 +222,7 @@ def result_set_from_query_dict(query_dict):
             elif operator == 'gt':
                 sql_where.append("{0}.coded_value_float >= {1:f}".format(alias, params[0]))
             elif operator == 'lt':
-                sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[0]))
+                sql_where.append("{0}.coded_value_float <= {1:f}".format(alias, params[1]))
             elif operator == 'categorical':
                 sql_where.append("{0}.code_id IN %s".format(alias) % id_array(params))
 

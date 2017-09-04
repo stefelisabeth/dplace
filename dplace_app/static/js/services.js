@@ -4,7 +4,7 @@ angular.module('dplaceServices', ['ngResource'])
         $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
     })
     .service('colorMapService', [ColorMapService])
-    .service('searchModelService',['VariableCategory','GeographicRegion', 'LanguageFamily', 'DatasetSources', 'Language', 'FindSocieties', 'colorMapService', SearchModelService])
+    .service('searchModelService',['VariableCategory','GeographicRegion', 'LanguageFamily', 'DatasetSources', 'Language', 'colorMapService', SearchModelService])
     .factory('LanguageFamily', function($resource) {
         return $resource(
             '/api/v1/language_families/:id',

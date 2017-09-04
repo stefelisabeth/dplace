@@ -3,7 +3,7 @@
  * search UI state across controllers
  * @constructor
  */
-function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, DatasetSources, Language, FindSocieties, colorMapService) {
+function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, DatasetSources, Language, colorMapService) {
     this.model = new SearchModel(VariableCategory, GeographicRegion, LanguageFamily, DatasetSources, Language);
     this.getModel = function() {
         return this.model;
@@ -55,7 +55,7 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
             extractedValues = societies.map(function(society) { 
                 for (var j = 0; j < society.variable_coded_values.length; j++) {
                     if (society.variable_coded_values[j].variable == results.variable_descriptions[i].variable.id) {
-                        if (society.variable_coded_values[j].coded_value_float) return society.variable_coded_values[j].coded_value_float;
+                        return society.variable_coded_values[j].coded_value_float;
                     }
                 }
             });
@@ -78,7 +78,6 @@ function SearchModelService(VariableCategory, GeographicRegion, LanguageFamily, 
         }   
         results = calculateRange(results);
         results = colorMapService.generateColorMap(results);
-        
         //color circles for table.html
         results.societies.forEach(function(container) {
             if (container.variable_coded_values.length > 0) {
