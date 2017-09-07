@@ -11,12 +11,12 @@ class Society(models.Model):
     xd_id = models.CharField(
         'Cross ID', db_index=True, default=None, null=True, max_length=10
     )
-    name = models.CharField('Name', db_index=True, max_length=200)
+    name = models.CharField('Name', db_index=True, max_length=500)
     latitude = models.FloatField('Latitude', null=True)
     longitude = models.FloatField('Longitude', null=True)
     focal_year = models.CharField('Focal Year', null=True, blank=True, max_length=100)
     alternate_names = models.TextField(default="")
-    original_name = models.CharField('ORIG_name', max_length=200, default=None, null=True)
+    original_name = models.CharField('ORIG_name', max_length=500, default=None, null=True)
     original_latitude = models.FloatField('ORIG_latitude', null=True)
     original_longitude = models.FloatField('ORIG_longitude', null=True)
     
@@ -24,8 +24,8 @@ class Society(models.Model):
     source = models.ForeignKey('Source', null=True, related_name="societies")
     language = models.ForeignKey('Language', null=True, related_name="societies")
     
-    hraf_link = models.CharField('HRAF', null=True, default=None, max_length=200)
-    chirila_link = models.CharField('CHIRILA', default=None, null=True, max_length=200)
+    hraf_link = models.CharField('HRAF', null=True, default=None, max_length=500)
+    chirila_link = models.CharField('CHIRILA', default=None, null=True, max_length=500)
     relationships = models.ManyToManyField(
         'self', through='SocietyRelation', symmetrical=False)
 
@@ -126,7 +126,7 @@ class Variable(models.Model):
     This number is converted to a label: EA006
     """
     label = models.CharField(max_length=50, db_index=True, unique=True)
-    name = models.CharField(max_length=200, db_index=True, default='Unknown')
+    name = models.CharField(max_length=500, db_index=True, default='Unknown')
     type = models.CharField(max_length=13)
     source = models.ForeignKey('Source', null=True)
     index_categories = models.ManyToManyField(
@@ -134,7 +134,7 @@ class Variable(models.Model):
     niche_categories = models.ManyToManyField(
         'Category', related_name='niche_variables')
     codebook_info = models.TextField(default='None')
-    data_type = models.CharField(max_length=200, null=True)
+    data_type = models.CharField(max_length=500, null=True)
     units = models.CharField(max_length=100, default='')
 
     def coded_societies(self):
@@ -167,7 +167,7 @@ class CodeDescription(models.Model):
     variable = models.ForeignKey('Variable', db_index=True, related_name="codes")
     code = models.CharField(max_length=20, db_index=True, null=False, default='.')
     code_number = models.IntegerField(null=True, db_index=True)
-    description = models.CharField(max_length=500, default='Unknown')
+    description = models.CharField(max_length=1000, default='Unknown')
     short_description = models.CharField(max_length=500, default="")
     n = models.IntegerField(null=True, default=0)
 
@@ -269,7 +269,7 @@ class LanguageFamily(models.Model):
 
 
 class Language(models.Model):
-    name = models.CharField(max_length=200, db_index=True)
+    name = models.CharField(max_length=500, db_index=True)
     glotto_code = models.CharField(max_length=8, null=False, unique=True)
 
     # needs to be null=True because some glottolog languages do not have isocodes
