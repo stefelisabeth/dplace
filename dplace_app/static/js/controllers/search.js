@@ -99,6 +99,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
     
     //removes a variable, language, or region from search parameters
     $scope.removeFromSearch = function(object, searchType) {
+
         var index = -1;
         switch(searchType) {
             case 'geographic':
@@ -119,7 +120,6 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                         $scope.searchModel.getLanguageClassifications().badgeValue -= langSelectedObjs[object][i].societies.length
                     }
                     delete langSelectedObjs[object];
-                    $scope.$broadcast('classificationSelectionChanged');
                 }
                 break;
             case 'language':
@@ -128,15 +128,15 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     for (var i = 0; i < langSelectedObjs[object.family.name].length; i++) {
                         if (langSelectedObjs[object.family.name][i].id == object.id) {
                             langSelectedObjs[object.family.name][i].isSelected = false;
-                            $scope.searchModel.getLanguageClassifications().badgeValue -= langSelectedObjs[object.family.name][i].societies.length
                             index = i;
                             break;
                         }
                     }
                     if (index > -1) {
                         langSelectedObjs[object.family.name].splice(index, 1);
-                        // sync Select all checkbox in language.(html|js)
-                        $scope.$broadcast('classificationSelectionChanged');
+                        $scope.searchModel.getLanguageClassifications().badgeValue -= object.societies.length;
+                        if (object.family.id == $scope.searchModel.getLanguageClassifications().allClasses.selectedFamily.id) 
+                            $scope.searchModel.getLanguageClassifications().allClasses.languages.allSelected = false;
                     }
                 }
                 break;
