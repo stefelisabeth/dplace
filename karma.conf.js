@@ -17,6 +17,8 @@ module.exports = function(config) {
         'static/bower_components/angular-resource/angular-resource.min.js',
         'static/bower_components/angular-route/angular-route.min.js',
         'static/bower_components/angular-mocks/angular-mocks.js',
+        'static/bower_components/d3/d3.js',
+        'static/bower_components/jquery/dist/jquery.js',
         'static/js/app.js',
         'static/js/controllers/app.js',
         'static/js/controllers/*.js',
