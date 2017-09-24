@@ -99,7 +99,6 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
     
     //removes a variable, language, or region from search parameters
     $scope.removeFromSearch = function(object, searchType) {
-
         var index = -1;
         switch(searchType) {
             case 'geographic':
@@ -135,7 +134,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     if (index > -1) {
                         langSelectedObjs[object.family.name].splice(index, 1);
                         $scope.searchModel.getLanguageClassifications().badgeValue -= object.societies.length;
-                        if (object.family.id == $scope.searchModel.getLanguageClassifications().allClasses.selectedFamily.id) 
+                        if ($scope.searchModel.getLanguageClassifications().allClasses.selectedFamily && object.family.id == $scope.searchModel.getLanguageClassifications().allClasses.selectedFamily.id) 
                             $scope.searchModel.getLanguageClassifications().allClasses.languages.allSelected = false;
                     }
                 }
