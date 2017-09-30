@@ -200,6 +200,25 @@ describe('Testing language controller', function() {
         expect(searchScope.removeFromSearch.calls.count()).toEqual(2);
 
     });
+
+    it('should select/deselect all languages', function() {
+       langScope.families[0].selectedFamily = language2.family; 
+       language2.isSelected = false;
+       language3.isSelected = false;
+       langScope.families[0].languages = [language2, language3];
+       langScope.families[0].languages.allSelected = true;
+       langScope.selectAllChanged(langScope.families[0]);
+       langScope.$digest();
+       expect(language2.isSelected).toBeTruthy();
+       expect(language3.isSelected).toBeTruthy();
+       expect(langScope.languageClassifications.selected['Austronesian']).toBeDefined();
+       expect(langScope.languageClassifications.selected['Austronesian']).toEqual([language2, language3]);
+       langScope.families[0].languages.allSelected = false;
+       langScope.selectAllChanged(langScope.families[0]);
+       langScope.$digest();
+       expect(langScope.languageClassifications.selected['Austronesian'].length).toBe(0);
+    
+    });
     
     it('should do search', function() {
         language1.isSelected = true;
