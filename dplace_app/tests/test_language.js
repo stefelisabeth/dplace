@@ -1,6 +1,6 @@
 //tests for language.js, containing the following functions to test:
-// selectionChanged - TO DO
-// selectAllChanged - TO DO
+// selectionChanged
+// selectAllChanged
 // addToSelection
 // classificationSelectionChanged
 // doSearch
@@ -42,6 +42,7 @@ describe('Testing language controller', function() {
         spyOn(searchScope, 'removeFromSearch').and.callThrough();
         spyOn(searchScope, 'search').and.callThrough();
         spyOn(langScope, 'classificationSelectionChanged').and.callThrough();
+        spyOn(langScope, 'selectAllChanged').and.callThrough();
                             
         language1 = {
             'family': {
@@ -85,7 +86,7 @@ describe('Testing language controller', function() {
             
          
         };
-        mockSearchModelService.getModel().getLanguageClassifications().allClasses = [language1.family, language2.family];
+        mockSearchModelService.getModel().getLanguageClassifications().allClasses = [{'name': 'Select All Languages', 'language_count': 5}, language1.family, language2.family];
         mockSearchModelService.getModel().getLanguageClassifications.allLanguages = [language1, language2, language3];
         $httpBackend.whenGET('/api/v1/categories?page_size=1000')
             .respond(200);
@@ -103,6 +104,65 @@ describe('Testing language controller', function() {
             .respond(200);
 
     }));
+    
+    it('should update selection when the user chooses a language family', function() {
+        langScope.languageClassifications.allLanguages = [language1, language2, language3];
+        //expected results
+        expected = [[1, [language1], 'Family 1', 2], [2, [language2, language3], 'Austronesian', 3]]
+        
+        //do this twice - once for Family 1 (single language) and once for Family 2 (multi-language family)
+        for (var l = 0; l < 2; l++) {
+            langScope.languageClassifications.badgeValue = 0;
+            langScope.families[0].selectedFamily = langScope.languageClassifications.allLanguages[l].family;
+            langScope.selectionChanged(langScope.families[0]);
+            langScope.$digest();
+            expect(langScope.selectAllChanged).toHaveBeenCalled();
+            expect(langScope.families[0].languages.length).toBe(expected[l][0]);
+            expect(langScope.families[0].languages.allSelected).toBeTruthy();
+            expect(langScope.families[0].selectedFamily.alreadySelected).toBeTruthy();
+            langScope.families[0].languages.forEach(function(lang) { expect(lang.isSelected).toBeTruthy(); });
+            expect(langScope.languageClassifications.selected[expected[l][2]]).toEqual(expected[l][1]);
+            expect(langScope.languageClassifications.badgeValue).toEqual(expected[l][3]);
+            langScope.languageClassifications.selected[expected[l][2]].splice(0, 1); //remove first language from selection
+            langScope.selectionChanged(langScope.families[0]);
+            langScope.$digest();
+            //shouldn't call this again because we've already selected the family before
+            expect(langScope.selectAllChanged.calls.count()).toBe(expected[l][0]); 
+            expect(langScope.families[0].languages[0].isSelected).toBeFalsy();
+            if (l == 1)
+                expect(langScope.families[0].languages[1].isSelected).toBeTruthy();
+            expect(langScope.families[0].selectedFamily.allSelected).toBeFalsy();
+        }
+    });
+    
+    //test 'Select All Languages' function
+    it('should select all languages', function() {
+        langScope.languageClassifications.allLanguages = [language1, language2, language3];
+        langScope.families[0].selectedFamily = {'name': 'Select All Languages'};
+        langScope.selectionChanged(langScope.families[0]);
+        langScope.$digest();
+        expect(langScope.selectAllChanged).toHaveBeenCalled();
+        expect(langScope.families[0].languages.length).toBe(3);
+        expect(langScope.families[0].languages.allSelected).toBeTruthy();
+        langScope.families[0].languages.forEach(function(lang) { expect(lang.isSelected).toBeTruthy(); });
+        expect(langScope.languageClassifications.selected['Family 1']).toBeDefined();
+        expect(langScope.languageClassifications.selected['Austronesian']).toBeDefined();
+        expect(langScope.languageClassifications.selected['Family 1']).toEqual([language1]);
+        expect(langScope.languageClassifications.selected['Austronesian']).toEqual([language2, language3]);
+        expect(langScope.languageClassifications.badgeValue).toEqual(5);
+        //select all families as already selected
+        langScope.families[0].forEach(function(f) { expect(f.alreadySelected).toBeTruthy(); });
+        
+        langScope.languageClassifications.selected['Family 1'] = [];
+        langScope.languageClassifications.badgeValue = 4;
+        langScope.selectionChanged(langScope.families[0]);
+        langScope.$digest();
+        expect(langScope.selectAllChanged.calls.count()).toBe(1); //shouldn't call again
+        expect(langScope.families[0].languages[0].isSelected).toBeFalsy();
+        expect(langScope.families[0].languages[1].isSelected).toBeTruthy();
+        expect(langScope.families[0].languages[2].isSelected).toBeTruthy();
+        expect(langScope.families[0].languages.allSelected).toBeFalsy();
+    });
     
     it('should add to selection', function() {
         language1.isSelected = true;
@@ -198,7 +258,6 @@ describe('Testing language controller', function() {
         langScope.classificationSelectionChanged(language2, langScope.families[0]);
         langScope.$digest();
         expect(searchScope.removeFromSearch.calls.count()).toEqual(2);
-
     });
 
     it('should select/deselect all languages', function() {
@@ -217,7 +276,6 @@ describe('Testing language controller', function() {
        langScope.selectAllChanged(langScope.families[0]);
        langScope.$digest();
        expect(langScope.languageClassifications.selected['Austronesian'].length).toBe(0);
-    
     });
     
     it('should do search', function() {
@@ -238,6 +296,5 @@ describe('Testing language controller', function() {
         };
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchquery);
         expect(searchScope.searchSocieties).toHaveBeenCalled();
-        
     });
 });

@@ -10,7 +10,6 @@ function LanguageCtrl($scope, searchModelService) {
     $scope.selectionChanged = function(scheme) {
         if (scheme.selectedFamily.name == 'Select All Languages') scheme.languages = $scope.languageClassifications.allLanguages; //Language.query()
         else scheme.languages = $scope.languageClassifications.allLanguages.filter(function(c) { return c.family.id == scheme.selectedFamily.id; });
-                
         if (!scheme.selectedFamily.alreadySelected) {
             //make select all the default
             scheme.languages.allSelected = true;
@@ -27,15 +26,15 @@ function LanguageCtrl($scope, searchModelService) {
                 if ($scope.languageClassifications.selected[language.family.name].map(function(lang) { return lang.id; }).indexOf(language.id) != -1) { 
                 //retrieve user's selection for this family
                     language.isSelected = true;
-                }
+                } else language.isSelected = false;
             });
             
             //retrieve state for Select All checkbox
             if (scheme.selectedFamily.name == 'Select All Languages') {
-                if ($scope.languageClassifications.badgeValue == scheme.languages.length) scheme.languages.allSelected = true;
+                if ($scope.languageClassifications.badgeValue == scheme.selectedFamily.language_count) scheme.languages.allSelected = true;
                 else scheme.languages.allSelected = false;
             } else {
-                if ($scope.languageClassifications.selected[scheme.selectedFamily.name].length == scheme.languages.length) scheme.languages.allSelected = true;
+                if ((scheme.selectedFamily.name in $scope.languageClassifications.selected) && ($scope.languageClassifications.selected[scheme.selectedFamily.name].length == scheme.languages.length)) scheme.languages.allSelected = true;
                 else scheme.languages.allSelected = false;
             }
         }
@@ -70,15 +69,17 @@ function LanguageCtrl($scope, searchModelService) {
             if (!(language.family.name in $scope.languageClassifications.selected)) return;
             $scope.removeFromSearch(language, 'language');
         }
-
-        if ($scope.languageClassifications.selected[language.family.name].length == scheme.languages.length) {
-            scheme.languages.allSelected = true;
-        } else scheme.languages.allSelected = false;
-
+        
+        if (scheme.selectedFamily.name == 'Select All Languages') {
+            if ($scope.languageClassifications.badgeValue == scheme.selectedFamily.language_count) scheme.languages.allSelected = true;
+            else scheme.languages.allSelected = false;
+        } else {
+            if ((scheme.selectedFamily.name in $scope.languageClassifications.selected) && ($scope.languageClassifications.selected[scheme.selectedFamily.name].length == scheme.languages.length)) scheme.languages.allSelected = true;
+            else scheme.languages.allSelected = false;
+        }
     };
 
     $scope.doSearch = function() {
         $scope.search();
     };
-
 }
