@@ -11,5 +11,5 @@ six==1.11.0
 coverage==4.4.1
 flake8==3.4.1
 newick==0.8.0
-clldutils==1.13.7
+clldutils==1.13.10
 attrs==17.2.0
