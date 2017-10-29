@@ -152,13 +152,18 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
             case 'variable':
                index = $scope.searchModel.getCulturalTraits().selectedVariables.map(function(v) { return v.id; }).indexOf(object.id);
                if (index > -1) {
-               if ($scope.searchModel.getCulturalTraits().selectedVariables[index].selected)
-                    codes_length = $scope.searchModel.getCulturalTraits().selectedVariables[index].selected.length;
-                else codes_length = 1;
-                $scope.searchModel.getCulturalTraits().selectedVariables.splice(index, 1);
-                $scope.searchModel.getCulturalTraits().badgeValue -= codes_length;
+                   if ($scope.searchModel.getCulturalTraits().selectedVariables[index].selected) {
+                       for (var i = 0; i < $scope.searchModel.getCulturalTraits().selectedVariables[index].selected.length; i++) {
+                           $scope.searchModel.getCulturalTraits().selectedVariables[index].selected[i].isSelected = false;
+                           $scope.searchModel.getCulturalTraits().badgeValue--;
+                       } 
+                   } else {
+                        $scope.searchModel.getCulturalTraits().badgeValue--;
+                   } 
+                    $scope.searchModel.getCulturalTraits().selectedVariables[index].allSelected = false;
+                    $scope.searchModel.getCulturalTraits().selectedVariables[index].selected = []
+                    $scope.$broadcast('numVars');
                }
-               $scope.$broadcast('numVars');
         }
         if (!$scope.searchModel.checkSelected()) {
             d3.select("#selected-criteria").classed("hidden", true);
