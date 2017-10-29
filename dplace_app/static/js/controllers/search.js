@@ -12,6 +12,8 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
     $scope.searchModel = searchModelService.getModel();
     $scope.searchBySocietyButton = {text: 'Search', disabled: false};
     $scope.selectedButton = $scope.searchModel.selectedButton;
+    $scope.searchCriteria = "View selected search criteria";
+
     var rP = 'radioPlaces';
     var rL = 'radioLanguage';
     var rC = 'radioCulture';
@@ -48,54 +50,30 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
         }
     ];
 
-    $scope.buttonChanged = function(selectedButton) {
-        $scope.selectedButton = selectedButton;
+    /*$scope.buttonChanged = function(selectedButton) {
+        $scope.selectedButton = selectedButton; //maybe this is redundant - check if we can just use seachModel.selectedButton
         $scope.searchModel.selectedButton = selectedButton;
-    };
+    };*/
 
     // All of this needs to move into model
     $scope.disableSearchButton = function () {
         $scope.searchButton.disabled = true;
         $scope.searchButton.text = 'Working...';
         $scope.searchBySocietyButton = {text: 'Working...', disabled: true};
-
     };
 
     $scope.enableSearchButton = function () {
         $scope.searchButton.disabled = false;
         $scope.searchButton.text = 'Search';
         $scope.searchBySocietyButton = {text: 'Search', disabled: false};
-
     };
-    
-    $scope.searchCriteria = "View selected search criteria";
 
     $scope.showCriteria = function() {
         $("#selected-criteria").toggleClass('hidden');
         $("#search-panel").toggleClass('col-md-9', 'col-md-12');
-        
         if (!$("#selected-criteria").hasClass('hidden')) $scope.searchCriteria = "Hide selected search criteria";
         else $scope.searchCriteria = "View selected search criteria";
     };
-
-    $scope.checkIfSelected = function() {
-        if ($scope.searchModel.getGeographicRegions().selectedRegions.length > 0) return true;
-        if ($scope.searchModel.getEnvironmentalData().selectedVariables.length > 0) {
-            for (var i = 0; i < $scope.searchModel.getEnvironmentalData().selectedVariables.length; i++) {
-                if ($scope.searchModel.getEnvironmentalData().selectedVariables[i].selectedVariable) return true;
-            }
-        }
-        if ($scope.searchModel.getCulturalTraits().selectedVariables.length > 0) {
-            for (var i = 0; i < $scope.searchModel.getCulturalTraits().selectedVariables.length; i++) {
-                if ($scope.searchModel.getCulturalTraits().selectedVariables[i].data_type.toLowerCase() == 'continuous') return true;
-                if ($scope.searchModel.getCulturalTraits().selectedVariables[i].selected.length > 0) return true;
-            }
-        }
-        for (var key in $scope.searchModel.getLanguageClassifications().selected) {
-            if ($scope.searchModel.getLanguageClassifications().selected[key].length > 0) return true;
-        }
-        return false;
-    }
     
     //removes a variable, language, or region from search parameters
     $scope.removeFromSearch = function(object, searchType) {
@@ -103,8 +81,10 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
         switch(searchType) {
             case 'geographic':
                 index = $scope.searchModel.getGeographicRegions().selectedRegions.indexOf(object);
-                $scope.searchModel.getGeographicRegions().selectedRegions.splice(index, 1);
-                $scope.searchModel.getGeographicRegions().badgeValue = $scope.searchModel.getGeographicRegions().selectedRegions.length;
+                if (index > -1) {
+                    $scope.searchModel.getGeographicRegions().selectedRegions.splice(index, 1);
+                    $scope.searchModel.getGeographicRegions().badgeValue--;
+                }
                 break;
             case 'environmental':
                 index = $scope.searchModel.getEnvironmentalData().selectedVariables.indexOf(object);
@@ -180,7 +160,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                }
                $scope.$broadcast('numVars');
         }
-        if (!$scope.checkIfSelected()) {
+        if (!$scope.searchModel.checkSelected()) {
             d3.select("#selected-criteria").classed("hidden", true);
             d3.select("#search-panel").classed("col-md-12", true);
             d3.select("#search-panel").classed("col-md-9", false);

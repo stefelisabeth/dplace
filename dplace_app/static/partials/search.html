@@ -15,7 +15,6 @@
                 <button ng-repeat="button in buttons"
                         type="button" class="btn radioBack {{button.radioClass}}"
                         ng-model="model.searchParams.selectedButton"
-                        ng-click="buttonChanged(button)"
                         btn-radio="button"
                         >
                         <span class="radioLabel">{{ button.name }}</span>
