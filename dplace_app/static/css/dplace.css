@@ -603,3 +603,9 @@ label.light {
     background-color:#000;
     opacity:0.25;
 }
+
+.source_dataset_table td {
+  vertical-align:top;
+  padding-right:20px;
+  padding-bottom:8px;
+}
