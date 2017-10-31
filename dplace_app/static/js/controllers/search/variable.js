@@ -28,7 +28,6 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
     };
     
     $scope.variableChanged = function(variable) {
-        console.log(variable);
         if (variable.selectedVariable != null) {
             if (variable.selectedVariable.data_type.toLowerCase() == 'continuous') {
                 $scope.values = MinAndMax.query({query: {id: variable.selectedVariable.id}});
