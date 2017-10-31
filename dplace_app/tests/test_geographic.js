@@ -70,21 +70,21 @@ describe('Testing geographic search', function() {
         geographicScope.$digest();
         expect(geographicScope.geographic.badgeValue).toEqual(2);
         
-        //test remove region
-        searchScope.removeFromSearch({
+        //test remove region - this is tested in searchcontroller, be
+        /*searchScope.removeFromSearch({
                 "code": "20",
                 "id": 4,
                 "name": "Asia"
             }, 'geographic');
         geographicScope.$digest();
-        expect(geographicScope.geographic.badgeValue).toEqual(1);
+        expect(geographicScope.geographic.badgeValue).toEqual(1);*/
         
         geographicScope.doSearch();
         expect(searchScope.search).toHaveBeenCalled();
         searchScope.$digest();
                 
         expected_searchQuery = {
-            'p': [geographicScope.geographic.selectedRegions[0].id]
+            'p': [5, 4]
         };
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalled();
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchQuery);
