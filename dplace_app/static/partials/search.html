@@ -72,7 +72,7 @@
                             <li ng-repeat="variable in searchModel.params.environmentalData.selectedVariables" ng-show="variable.selectedVariable">
                                 <a ng-click="removeFromSearch(variable, 'environmental')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{variable.selectedVariable.name}}
                                 <ul class="criteria-list">
-                                    <li ng-repeat="code in variable.selectedVariable.selected">
+                                    <li ng-repeat="code in variable.selectedVariable.codes" ng-show="code.isSelected">
                                         <a ng-click="code.type ='e'; removeFromSearch(code, 'code')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
                                     </li>
                                 </ul>
