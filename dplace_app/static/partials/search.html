@@ -58,10 +58,10 @@
                         </ul>
                     <h5 data-toggle="collapse" data-target="#scCulture" ng-show="searchModel.params.culturalTraits.selectedVariables.length > 0" style="cursor:pointer;"><strong>Culture</strong></h5>
                        <ul id="scCulture" class="list-unstyled collapse in" style="padding-left:10px;">
-                        <li ng-repeat="variable in searchModel.params.culturalTraits.selectedVariables" ng-show="variable.data_type == 'Continuous' || variable.selected.length > 0">
+                        <li ng-repeat="variable in searchModel.params.culturalTraits.selectedVariables" ng-show="(variable.data_type == 'Continuous') || (variable.codes | isEmpty)">
                             <a ng-click="removeFromSearch(variable, 'variable')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ variable.name }}
                             <ul class="criteria-list">
-                                <li ng-repeat="code in variable.selected">
+                                <li ng-repeat="code in variable.codes" ng-show="code.isSelected">
                                     <a ng-click="code.type ='c'; removeFromSearch(code, 'code')" style="color:red;"><span title="Remove criterion" class="glyphicon glyphicon-remove"></span></a>&nbsp;{{ code.short_description }}
                                 </li>
                             </ul>

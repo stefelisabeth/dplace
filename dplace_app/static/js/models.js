@@ -68,7 +68,7 @@ function CulturalTraitModel(VariableCategory, DatasetSources) {
     this.checkSelected = function() {
         for (var i = 0; i < this.selectedVariables.length; i++) {
             if (this.selectedVariables[i].data_type.toLowerCase() == 'continuous') return true;
-            if (this.selectedVariables[i].selected.length > 0) return true;
+            if (this.selectedVariables[i].codes.filter(function(c) { return c.isSelected; }).length > 0) return true;
         }
         return false;
     };
@@ -82,7 +82,6 @@ function GeographicRegionModel(GeographicRegion) {
 }
 
 function EnvironmentalDataModel(VariableCategory) {
-    //this.variables = [];
     this.categories = VariableCategory.query({type: 'environmental'});
     this.filters = [
         { operator: 'inrange', name: 'between' },
@@ -102,7 +101,6 @@ function EnvironmentalDataModel(VariableCategory) {
 }
 
 function LanguageClassificationModel(LanguageFamily, Language) {
-    
     /* List of all Language Classes - needed for language search */
     this.allClasses = LanguageFamily.query();
     this.allLanguages = Language.query();
