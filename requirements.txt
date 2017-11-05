@@ -8,7 +8,7 @@ ete3==3.0.0b35
 psycopg2==2.7.3.2
 python-nexus==1.53
 six==1.11.0
-coverage==4.4.1
+coverage==4.4.2
 flake8==3.5.0
 newick==0.8.0
 clldutils==1.13.10
