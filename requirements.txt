@@ -4,7 +4,7 @@ django-appconf==1.0.2
 django-bootstrap3==9.1.0
 django-filter==1.0.4
 djangorestframework==3.6.4
-ete3==3.0.0b35
+ete3==3.1.1
 psycopg2==2.7.3.2
 python-nexus==1.53
 six==1.11.0
