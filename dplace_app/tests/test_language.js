@@ -6,7 +6,7 @@
 // doSearch
 
 describe('Testing language controller', function() {
-    var $httpBackend, appScope, mockAppCtrl, searchScope, langScope, mockSearchCtrl, mockLangCtrl, mockSearchModelService, mockFindSocieties, mockColorMapService;
+    var $httpBackend, appScope, mockAppCtrl, searchScope, langScope, mockSearchCtrl, mockLangCtrl, mockSearchModelService, mockFindSocieties, mockColorMapService, languages;
     var language1, language2, language3; 
     beforeEach(function() {
         module('dplaceServices');
@@ -19,8 +19,11 @@ describe('Testing language controller', function() {
         mockSearchModelService = searchModelService;
         mockAppCtrl = $controller('AppCtrl', {$scope: appScope, searchModelService: mockSearchModelService});
         spyOn(appScope, 'setActive');
-
-        mockColorMapService = colorMapService;
+		
+		//Load Language JSON data
+		languages = window.__fixtures__['languages'];
+        
+		mockColorMapService = colorMapService;
         
         searchScope = appScope.$new();
         mockSearchCtrl = $controller('SearchCtrl', {
@@ -31,6 +34,7 @@ describe('Testing language controller', function() {
         });
 
         langScope = searchScope.$new();
+		
         mockLangCtrl = $controller('LanguageCtrl', {
             $scope: langScope,
             searchModelService: mockSearchModelService
@@ -44,48 +48,9 @@ describe('Testing language controller', function() {
         spyOn(langScope, 'classificationSelectionChanged').and.callThrough();
         spyOn(langScope, 'selectAllChanged').and.callThrough();
                             
-        language1 = {
-            'family': {
-                'id': 11,
-                'language_count': 11,
-                'name': 'Family 1',
-                'scheme': 'G'
-            },
-            'glotto_code': "abcd1234",
-            'id': 1100,
-            'iso_code': "abc",
-            'name': "ABCD",
-            'societies': [1, 2]
-         
-        };
-        language2 = {
-            'family': {
-                'id': 58,
-                'name': 'Austronesian',
-                'scheme': 'G'
-            },
-            'glotto_code': "efgh1234",
-            'id': 1110,
-            'iso_code': "efg",
-            'name': "SFGH",
-            'societies': [1]
-         
-        };
-        
-        language3 = {
-            'family': {
-                'id': 58,
-                'name': 'Austronesian',
-                'scheme': 'G'
-            },
-            'glotto_code': "lmno1234",
-            'id': 1111,
-            'iso_code': "lmn",
-            'name': "LMNO",
-            'societies': [1, 2]
-            
-         
-        };
+        language1 = languages.language1;
+        language2 = languages.language2;
+        language3 = languages.language3;
         mockSearchModelService.getModel().getLanguageClassifications().allClasses = [{'name': 'Select All Languages', 'language_count': 5}, language1.family, language2.family];
         mockSearchModelService.getModel().getLanguageClassifications.allLanguages = [language1, language2, language3];
         $httpBackend.whenGET('/api/v1/categories?page_size=1000')
@@ -106,7 +71,7 @@ describe('Testing language controller', function() {
     }));
     
     it('should update selection when the user chooses a language family', function() {
-        langScope.languageClassifications.allLanguages = [language1, language2, language3];
+		langScope.languageClassifications.allLanguages = [language1, language2, language3];
         //expected results
         expected = [[1, [language1], 'Family 1', 2], [2, [language2, language3], 'Austronesian', 3]]
         
