@@ -7,7 +7,7 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
         } else {
             $scope.variables = searchModelService.getModel().getEnvironmentalData().selectedVariables;
             if ($scope.variables.length == 0) {
-                $scope.variables.push({'vals': ['', ''], 'selectedFilter': $scope.filters[0], 'variables': [], 'categories': []});
+                $scope.variables.push({'vals': ['', ''], 'selectedFilter': $scope.filters[0], 'categories': []});
                 $scope.variables[0].categories = searchModelService.getModel().getEnvironmentalData().categories;
             }
         }

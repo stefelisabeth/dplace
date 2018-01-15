@@ -83,8 +83,10 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                 break;
             case 'environmental':
                 index = $scope.searchModel.getEnvironmentalData().selectedVariables.indexOf(object);
-                $scope.searchModel.getEnvironmentalData().selectedVariables.splice(index, 1);
-                $scope.searchModel.getEnvironmentalData().badgeValue = $scope.searchModel.getEnvironmentalData().selectedVariables.length;
+                if (index > -1) {
+                    $scope.searchModel.getEnvironmentalData().selectedVariables.splice(index, 1);
+                    $scope.searchModel.getEnvironmentalData().badgeValue = $scope.searchModel.getEnvironmentalData().selectedVariables.length;
+                }
                 break;
             case 'family':
                 var langSelectedObjs = $scope.searchModel.getLanguageClassifications().selected;
@@ -126,9 +128,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                     variable = $scope.searchModel.getEnvironmentalData().selectedVariables.map(function(v) { return v.selectedVariable.id; }).indexOf(object.variable);
                     if (variable > -1) {
                         $scope.searchModel.getEnvironmentalData().selectedVariables[variable].selectedVariable.allSelected = false;
-                    
                     }
-                   
                 }
                 break;
             case 'variable':
