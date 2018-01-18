@@ -10,11 +10,13 @@
     "easternEurope": {
         "code": "14",
         "id": 5,
-        "name": "Eastern Europe"
+        "name": "Eastern Europe",
+        "region_nam": "Eastern Europe"
     },
     "Asia": {
         "code": "20",
         "id": 4,
-        "name": "Asia"
+        "name": "Asia",
+        "region_nam": "Southeast Asia"
     }
 }

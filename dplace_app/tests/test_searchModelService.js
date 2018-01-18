@@ -125,11 +125,11 @@ describe('Search Model Service Testing', function() {
 	//the functions below are in order to test these priorities.
 
     it('should assign colors - geographic region', function() {
-        mockResults.geographic_regions.push(geographic_region);
+        mockResults.geographic_regions = [geographic_region, regions.easternEurope, regions.Asia, regions.Asia]
         mockResults.societies.push(society1);
         mockSearchModelService.assignColors(mockResults);
         expect(mockResults.geographic_regions.codes).toBeDefined();
-        expect(mockResults.geographic_regions.codes[geographic_region.tdwg_code]).toBe('rgb(255,0,0)');
+        expect(mockResults.geographic_regions.codes[geographic_region.tdwg_code]).toBe('rgb(255,255,0)');
         expect(mockResults.societies[0].society.style).toBeDefined();
         expect(mockResults.societies[0].society.style['background-color']).toEqual(mockResults.geographic_regions.codes[geographic_region.tdwg_code]);
     });
