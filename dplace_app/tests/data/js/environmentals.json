@@ -22,7 +22,7 @@
 			"codes": [
 				{"code": "NA", "description": "Missing data"},
 				{"code": "1", "description": "Biome 1"},
-				{"code": "2", "description": "Biome 2"},
+				{"code": "2", "description": "Biome 2", "type": "e", "variable": 318},
 				{"code": "3", "description": "Biome 3"},
 				{"code": "4", "description": "Biome 4"},
 			]
