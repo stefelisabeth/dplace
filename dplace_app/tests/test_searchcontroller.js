@@ -5,32 +5,51 @@ enableSearchButton - done
 showCriteria - done
 removeFromSearch - done
 searchSocieties
-searchBySociety
+searchBySociety - done
 search
 resetSearch
 
-Private functions (can't really be tested here):
+Private callback functions:
 errorCallBack
 searchCompletedCallback
-searchBySocietyCallback
-
+searchBySocietyCallback - done
 */
 
 describe('Testing search controller', function() {
-    var compile, appScope, mockAppCtrl, searchScope, mockSearchCtrl, mockSearchModelService, mockColorMapService, mockFindSocieties, searchBySocietyCallback;
-    
+    var compile, appScope, $window, mockAppCtrl, searchScope, mockSearchCtrl, mockSearchModelService, mockColorMapService, mockFindSocieties, searchBySocietyCallback;
     //for loading JSON data
-    var regions, languages, environmentals, culturals, societies;
-    
+    var queryDeferred, regions, languages, environmentals, culturals, results;
+
     beforeEach(function() {
         module('dplaceServices');
         module('dplace');
     });
     
-    beforeEach(inject(function($compile, $rootScope, $controller, searchModelService, colorMapService, FindSocieties, $httpBackend) {
+    beforeEach(inject(function($compile, $httpBackend, $rootScope, $controller, searchModelService, colorMapService, FindSocieties, $q) {
         compile = $compile;
+        $window = {location: {href:''}};
+        results = {
+            "sources": [
+            {"id": 1,
+            "name": "Binford"},
+            {"id":2,
+            "name": "EA"}
+            ],
+            "societies": [
+                {"society":{"id":60,"ext_id":"Nb14","xd_id":"xd1073","hraf_link":"","name":"Comox","original_name":"Comox (Nb14)","alternate_names":"K'ómoks","location":{"coordinates":[-124.97,49.72]},"original_location":{"coordinates":[-125.0,50.0]},"language":{"id":59,"name":"Island Comox","glotto_code":"isla1276","iso_code":"","family":{"id":8,"name":"Salishan"}},"focal_year":"1880","source":{"id":1,"key":"ethnographicatlas","reference":"Murdock, G. P., R. Textor, H. Barry, III, D. R. White, J. P. Gray, and W. T. Divale. 1999. Ethnographic Atlas. World Cultures 10:24-136 (codebook)","name":"Ethnographic Atlas"},"region":{"id":36,"level_2_re":71.0,"count":4.0,"region_nam":"Western Canada","continent":"NORTHERN AMERICA","tdwg_code":71}},"variable_coded_values":[],"environmental_values":[]},
+                {"society":{"id":167,"ext_id":"Nd36","xd_id":"xd1170","hraf_link":"Western (NT22)","name":"Wiyambituka","original_name":"Wiyambituka (Nd36)","alternate_names":"Morey Shoshoni, Great Smokey Valley Shoshoni, Little Smokey Valley Shoshoni","location":{"coordinates":[-117.0,39.0]},"original_location":{"coordinates":[-117.0,39.0]},"language":{"id":149,"name":"Western Shoshoni","glotto_code":"west2622","iso_code":"","family":{"id":25,"name":"Uto-Aztecan"}},"focal_year":"1870","source":{"id":1,"key":"ethnographicatlas","reference":"Murdock, G. P., R. Textor, H. Barry, III, D. R. White, J. P. Gray, and W. T. Divale. 1999. Ethnographic Atlas. World Cultures 10:24-136 (codebook)","name":"Ethnographic Atlas"},"region":{"id":41,"level_2_re":76.0,"count":4.0,"region_nam":"Southwestern U.S.A.","continent":"NORTHERN AMERICA","tdwg_code":76}},"variable_coded_values":[],"environmental_values":[]},
+                {"society":{"id":1449,"ext_id":"B233","xd_id":"xd1170","hraf_link":"Western (NT22)","name":"Wiyambituka","original_name":"Little Smokey Shoshoni (B233)","alternate_names":"Morey Shoshoni, Great Smokey Valley Shoshoni, Little Smokey Valley Shoshoni","location":{"coordinates":[-115.84,39.33]},"original_location":{"coordinates":[-115.84,39.33]},"language":{"id":149,"name":"Western Shoshoni","glotto_code":"west2622","iso_code":"","family":{"id":25,"name":"Uto-Aztecan"}},"focal_year":"1860","source":{"id":2,"key":"binfordhuntergatherer","reference":"Binford, L. 2001. Constructing Frames of Reference: An Analytical Method for Archaeological Theory Building Using Hunter-gatherer and Environmental Data Sets. University of California Press","name":"Binford Hunter-Gatherer"},"region":{"id":41,"level_2_re":76.0,"count":4.0,"region_nam":"Southwestern U.S.A.","continent":"NORTHERN AMERICA","tdwg_code":76}},"variable_coded_values":[],"environmental_values":[]},
+                {"society":{"id":1358,"ext_id":"B282","xd_id":"xd1073","hraf_link":"","name":"Comox","original_name":"Comox (B282)","alternate_names":"K'ómoks","location":{"coordinates":[-125.5,50.0]},"original_location":{"coordinates":[-125.5,50.0]},"language":{"id":59,"name":"Island Comox","glotto_code":"isla1276","iso_code":"","family":{"id":8,"name":"Salishan"}},"focal_year":"1860","source":{"id":2,"key":"binfordhuntergatherer","reference":"Binford, L. 2001. Constructing Frames of Reference: An Analytical Method for Archaeological Theory Building Using Hunter-gatherer and Environmental Data Sets. University of California Press","name":"Binford Hunter-Gatherer"},"region":{"id":36,"level_2_re":71.0,"count":4.0,"region_nam":"Western Canada","continent":"NORTHERN AMERICA","tdwg_code":71}},"variable_coded_values":[],"environmental_values":[]}
+            ],
+            "environmental_variables": [],
+            "variable_descriptions": [],
+            "geographic_regions": [],
+            "languages": []
+        }
         
         appScope = $rootScope.$new();
+        searchScope = appScope.$new();
+        queryDeferred = $q.defer();
         
         regions = window.__fixtures__['regions'];
 		environmentals = window.__fixtures__['environmentals'];
@@ -40,18 +59,25 @@ describe('Testing search controller', function() {
         mockSearchModelService = searchModelService;
         mockAppCtrl = $controller('AppCtrl', {$scope: appScope, searchModelService: mockSearchModelService});
         spyOn(appScope, 'setActive');
-
+        spyOn(appScope, 'switchToResults');
+        
         mockColorMapService = colorMapService;
         mockFindSocieties = FindSocieties;
-        searchScope = appScope.$new();
-
+        
         mockSearchCtrl = $controller('SearchCtrl', {
             $scope: searchScope,
             colorMapService: mockColorMapService,
             searchModelService: mockSearchModelService,
-            FindSocieties: mockFindSocieties
+            FindSocieties: mockFindSocieties,
+            $window: $window
         });
         
+        //spies for searchScope functions
+        spyOn(searchScope, 'disableSearchButton').and.callThrough();
+        spyOn(searchScope, 'searchBySociety').and.callThrough();
+        spyOn(searchScope, 'enableSearchButton').and.callThrough();
+
+        //expected requests
         $httpBackend.whenGET('/api/v1/categories?page_size=1000')
             .respond(200);
         $httpBackend.whenGET('/api/v1/get_dataset_sources')
@@ -64,15 +90,10 @@ describe('Testing search controller', function() {
             .respond(200);
         $httpBackend.whenGET('/api/v1/languages?page_size=1000')
             .respond(200);
-        $httpBackend.whenPOST('/api/v1/find_societies')
+        $httpBackend.whenGET(/api\/v1\/find_societies\?.*/)
             .respond(200);
-        $httpBackend.whenGET('/api/v1/find_societies?name=austronesian')
-            .respond(200);
-            
-        spyOn(searchScope, 'disableSearchButton').and.callThrough();
-        //spyOn(searchScope, 'searchBySociety').and.callThrough();
-
     }));
+    
     
     it('should check starting values', function() {
         expect(searchScope.selectedButton).not.toBeDefined();
@@ -153,6 +174,8 @@ describe('Testing search controller', function() {
         expect(mockSearchModelService.getModel().getLanguageClassifications().badgeValue).toEqual(5);
         expect(mockSearchModelService.getModel().getLanguageClassifications().selected['Austronesian']).toEqual([language2, language3]);
         expect(mockSearchModelService.getModel().getLanguageClassifications().selected['Family 1']).toEqual([language1]);
+        
+        //test removal of family that has been selected
         searchScope.removeFromSearch('Austronesian', 'family');
         searchScope.$digest();
         expect(mockSearchModelService.getModel().getLanguageClassifications().badgeValue).toEqual(2);
@@ -211,15 +234,14 @@ describe('Testing search controller', function() {
         
     it('should remove environmental variable', function() {
         var to_remove = environmentals.variables.continuousEnvVar;
-
         mockSearchModelService.getModel().getEnvironmentalData().selectedVariables = [to_remove, environmentals.variables.categoricalEnvVar];
-
         mockSearchModelService.getModel().getEnvironmentalData().badgeValue = 2;
         searchScope.removeFromSearch(to_remove, 'environmental');
         searchScope.$digest();
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables.length).toEqual(1);
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables.indexOf(to_remove)).toEqual(-1);
         expect(mockSearchModelService.getModel().getEnvironmentalData().badgeValue).toEqual(1);
+        
         //test removal of variable that doesn't exist
         searchScope.removeFromSearch(to_remove, 'environmental');
         searchScope.$digest();
@@ -291,5 +313,90 @@ describe('Testing search controller', function() {
         expect(mockSearchModelService.getModel().getCulturalTraits().badgeValue).toEqual(0);
         expect(mockSearchModelService.getModel().getCulturalTraits().selectedVariables.indexOf(continuous_variable)).toEqual(-1);
     });
+    
+    it('should search by society name + return many societies', function() {
+        //mock the successful return of the data from FindSocieties.find(). 
+        //callbackFxn is searchbySocietyCallBack in search.js.
+        //call it manually here, upon successful resolve
+        spyOn(mockFindSocieties, 'find').and.callFake(function(queryTerms, callbackFxn) {
+            queryDeferred.promise.then(function(r) {
+                searchScope.searchModel.results = r; 
+                callbackFxn();
+            });
+            queryDeferred.resolve(results);
+            appScope.$apply();
+            return searchScope.searchModel.results; //return the results to searchScope
+        });
 
+        searchScope.model.societyQuery = 'mo';
+        searchScope.searchBySociety();
+        expect(searchScope.disableSearchButton).toHaveBeenCalled();
+        expect(searchScope.searchModel.query).toEqual({'name': 'mo'});
+        expect(mockFindSocieties.find).toHaveBeenCalled();
+        //check callback function
+        expect(searchScope.enableSearchButton).toHaveBeenCalled();
+        expect(searchScope.searchModel.results.searchedByName).toBeDefined();
+        expect(searchScope.searchModel.results.searchedByName).toBeTruthy();
+        expect(appScope.switchToResults).toHaveBeenCalled(); //more than one society returned, so should switch to results page
+        //hack to get the function below to return only one society
+        alreadyCalledOnce = true;
+    });
+    
+    it('should search by society name + return one society', function() {
+        //mock the successful return of the data from FindSocieties.find(). 
+        //callbackFxn is searchbySocietyCallBack in search.js.
+        //call it manually here, upon successful resolve
+        spyOn(mockFindSocieties, 'find').and.callFake(function(queryTerms, callbackFxn) {
+            results.societies = [results.societies[0]];
+            
+            queryDeferred.promise.then(function(r) {
+                searchScope.searchModel.results = r; 
+                callbackFxn();
+            });
+            queryDeferred.resolve(results);
+            appScope.$apply();
+            return searchScope.searchModel.results; //return the results to searchScope
+        });
+
+        searchScope.model.societyQuery = 'Comox';
+        searchScope.searchBySociety();
+        expect(searchScope.disableSearchButton).toHaveBeenCalled();
+        expect(searchScope.searchModel.query).toEqual({'name': 'Comox'});
+        expect(mockFindSocieties.find).toHaveBeenCalled();
+        //check callback function
+        expect(searchScope.enableSearchButton).toHaveBeenCalled();
+        expect(searchScope.searchModel.results.searchedByName).toBeDefined();
+        expect(searchScope.searchModel.results.searchedByName).toBeTruthy();
+        //should go straight to page because only one society returned
+        expect(appScope.switchToResults).not.toHaveBeenCalled();
+        expect($window.location.href).toEqual('/society/Nb14');
+    });
+    
+    it('should search by society name + return no societies', function() {
+        //mock the successful return of the data from FindSocieties.find(). 
+        //callbackFxn is searchbySocietyCallBack in search.js.
+        //call it manually here, upon successful resolve
+        spyOn(mockFindSocieties, 'find').and.callFake(function(queryTerms, callbackFxn) {
+            results.societies = [];
+            
+            queryDeferred.promise.then(function(r) {
+                searchScope.searchModel.results = r; 
+                callbackFxn();
+            });
+            queryDeferred.resolve(results);
+            appScope.$apply();
+            return searchScope.searchModel.results; //return the results to searchScope
+        });
+
+        searchScope.model.societyQuery = 'qwerty';
+        searchScope.searchBySociety();
+        expect(searchScope.disableSearchButton).toHaveBeenCalled();
+        expect(searchScope.searchModel.query).toEqual({'name': 'qwerty'});
+        expect(mockFindSocieties.find).toHaveBeenCalled();
+        //check callback function
+        expect(searchScope.enableSearchButton).toHaveBeenCalled();
+        expect(searchScope.searchModel.results.searchedByName).toBeDefined();
+        expect(searchScope.searchModel.results.searchedByName).toBeTruthy();
+        expect(appScope.switchToResults).toHaveBeenCalled();
+    });
 })
