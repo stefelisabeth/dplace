@@ -6,7 +6,7 @@ showCriteria - done
 removeFromSearch - done
 searchSocieties
 searchBySociety - done
-search
+search - done
 resetSearch
 
 Private callback functions:
@@ -76,6 +76,9 @@ describe('Testing search controller', function() {
         spyOn(searchScope, 'disableSearchButton').and.callThrough();
         spyOn(searchScope, 'searchBySociety').and.callThrough();
         spyOn(searchScope, 'enableSearchButton').and.callThrough();
+        spyOn(searchScope, 'search').and.callThrough();
+        spyOn(mockSearchModelService, 'updateSearchQuery').and.callThrough();
+        spyOn(searchScope, 'searchSocieties').and.callThrough();
 
         //expected requests
         $httpBackend.whenGET('/api/v1/categories?page_size=1000')
@@ -399,4 +402,59 @@ describe('Testing search controller', function() {
         expect(searchScope.searchModel.results.searchedByName).toBeTruthy();
         expect(appScope.switchToResults).toHaveBeenCalled();
     });
+    
+    it('should update search query + search', function() {
+        //set up search parameters - geographic regions
+        mockSearchModelService.getModel().getGeographicRegions().allRegions = [regions.Africa, regions.easternEurope, regions.Asia, regions.westernEurope];
+        mockSearchModelService.getModel().getGeographicRegions().selectedRegions = [regions.Asia, regions.easternEurope];
+        
+        //set up search parameters - languages
+        language1.isSelected = true; 
+        language2.isSelected = true;
+        language3.isSelected = true;
+        mockSearchModelService.getModel().getLanguageClassifications().selected = {
+            'Austronesian': [language2, language3],
+            'Family 1': [language1]
+        };
+        
+        //set up search parameters - environmental variables 
+        continuousVar = environmentals.variables.continuousEnvVar.variable;
+        continuousVar.selectedFilter = {'operator': 'inrange'};
+        continuousVar.vals = ['0', '150.2'];
+        
+        env_variable = environmentals.variables.categoricalEnvVar.variable;
+        env_variable.allSelected = true;
+        env_variable.codes = environmentals.variables.categoricalEnvVar.codes;
+        env_variable.codes.forEach(function(c) {
+            c.isSelected = true;
+        });
+        mockSearchModelService.getModel().getEnvironmentalData().selectedVariables = [
+            {'selectedVariable': env_variable},
+            {'selectedVariable': continuousVar}
+        ]
+        
+        //set up search parameters - cultural variables
+        variable_description = culturals.variables.categoricalCulturalVar.variable;
+        variable_description.allSelected = true;
+        variable_description.codes = culturals.variables.categoricalCulturalVar.codes;
+        variable_description.codes.forEach(function(c){
+            c.isSelected = true;
+        });
+        continuous_variable = culturals.variables.continuousCulturalVar.variable;
+        continuous_variable.selectedFilter = {'operator': 'gt'};
+        continuous_variable.vals = ['500', '10000'];
+        mockSearchModelService.getModel().getCulturalTraits().selectedVariables = [continuous_variable, variable_description];
+        
+        expected_searchQuery = {
+            'e': [[env_variable.id, 'categorical', env_variable.codes.map(function(m) { return m.id; })], [continuousVar.id, 'inrange', continuousVar.vals]],
+            'p': [regions.Asia.id, regions.easternEurope.id],
+            'l': [language2.id, language3.id, language1.id],
+            'c': [[continuous_variable.id, 'gt', continuous_variable.vals], [variable_description.id, 'categorical', variable_description.codes.map(function(m) { return m.id; })]]
+        }
+        
+        searchScope.search();
+        expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchQuery);
+        expect(searchScope.searchSocieties).toHaveBeenCalled();
+    });
+
 })

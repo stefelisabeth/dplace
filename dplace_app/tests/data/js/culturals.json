@@ -2,11 +2,11 @@
 	"variables": {
 		"categoricalCulturalVar": {
 			"codes": [
-				{"code": "NA", "description": "Missing data"},
-				{"code": "1", "description": "Absence of slavery"},
-				{"code": "2", "description": "Incipient or nonhereditary slavery, i.e., where slave status is temporary and not transmitted to the children of slaves"},
-				{"code": "3", "description": "Slavery reported but not identified as hereditary or nonhereditary"},
-				{"code": "4", "description": "Hereditary slavery present and of at least modest social significance"},
+				{"code": "NA", "description": "Missing data", "id": 40},
+				{"code": "1", "description": "Absence of slavery", "id": 41},
+				{"code": "2", "description": "Incipient or nonhereditary slavery, i.e., where slave status is temporary and not transmitted to the children of slaves", "id": 42},
+				{"code": "3", "description": "Slavery reported but not identified as hereditary or nonhereditary", "id": 43},
+				{"code": "4", "description": "Hereditary slavery present and of at least modest social significance", "id": 44},
 			],
 			"variable": {
 				"id": 1628,
