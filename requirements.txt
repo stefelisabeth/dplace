@@ -12,4 +12,4 @@ coverage==4.4.2
 flake8==3.5.0
 newick==0.8.0
 clldutils==2.0.1
-attrs==17.2.0
+attrs==17.4.0
