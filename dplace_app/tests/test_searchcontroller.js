@@ -4,14 +4,14 @@ disableSearchButton - done
 enableSearchButton - done
 showCriteria - done
 removeFromSearch - done
-searchSocieties
+searchSocieties - done
 searchBySociety - done
 search - done
-resetSearch
+resetSearch - done
 
 Private callback functions:
-errorCallBack
-searchCompletedCallback
+errorCallBack - done
+searchCompletedCallback - done
 searchBySocietyCallback - done
 */
 
@@ -76,10 +76,13 @@ describe('Testing search controller', function() {
         spyOn(searchScope, 'disableSearchButton').and.callThrough();
         spyOn(searchScope, 'searchBySociety').and.callThrough();
         spyOn(searchScope, 'enableSearchButton').and.callThrough();
+        spyOn(searchScope, 'showCriteria').and.callThrough();
         spyOn(searchScope, 'search').and.callThrough();
         spyOn(mockSearchModelService, 'updateSearchQuery').and.callThrough();
         spyOn(searchScope, 'searchSocieties').and.callThrough();
         spyOn(mockSearchModelService, 'searchCompletedCallback');
+        spyOn(mockSearchModelService.getModel(), 'reset');
+        spyOn(appScope, '$broadcast');
 
         //expected requests
         $httpBackend.whenGET('/api/v1/categories?page_size=1000')
@@ -139,6 +142,7 @@ describe('Testing search controller', function() {
         searchScope.showCriteria();
         expect(elem.hasClass('hidden')).toBeTruthy();
         expect(searchScope.searchCriteria).toBe('View selected search criteria');
+        elem.remove(); //remove so that this doesn't interfere with later test
     });
     
     
@@ -505,4 +509,23 @@ describe('Testing search controller', function() {
         expect(searchScope.searchSocieties).toHaveBeenCalled();
     });
 
+    it('should reset search', function() {
+        searchScope.errors = "dlfkjdlakfj"; //text string
+        searchScope.searchButton.disabled = true;
+        searchScope.searchButton.text = "Working...";
+        
+        var elem = angular.element('<div id="selected-criteria" class="show">');
+        angular.element(document.body).append(elem);
+        elem = compile(elem)(appScope);
+        appScope.$digest();
+        
+        searchScope.resetSearch();
+        expect(searchScope.errors).toBe("");
+        expect(searchScope.enableSearchButton).toHaveBeenCalled();
+        expect(mockSearchModelService.getModel().reset).toHaveBeenCalled();
+        expect(searchScope.showCriteria).toHaveBeenCalled();
+        expect(appScope.$broadcast).toHaveBeenCalledWith('searchModelReset');
+       
+    });
+    
 })
