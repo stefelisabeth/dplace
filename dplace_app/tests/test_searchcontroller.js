@@ -79,6 +79,7 @@ describe('Testing search controller', function() {
         spyOn(searchScope, 'search').and.callThrough();
         spyOn(mockSearchModelService, 'updateSearchQuery').and.callThrough();
         spyOn(searchScope, 'searchSocieties').and.callThrough();
+        spyOn(mockSearchModelService, 'searchCompletedCallback');
 
         //expected requests
         $httpBackend.whenGET('/api/v1/categories?page_size=1000')
@@ -403,6 +404,54 @@ describe('Testing search controller', function() {
         expect(appScope.switchToResults).toHaveBeenCalled();
     });
     
+    //test successful search
+    it('should search for societies', function() {
+        spyOn(mockFindSocieties, 'find').and.callFake(function(queryTerms, callbackFxn, errorFxn) {
+            queryDeferred.promise.then(function(r) {
+               searchScope.searchModel.results = r;
+               callbackFxn();
+            });
+            queryDeferred.resolve(results); //we test searchCompletedCallback in the searchModelService test, so we'll just resolve the promise here to test controller logic
+            appScope.$apply();
+            return searchScope.searchModel.results;
+        });
+        
+        searchScope.searchModel.query = {'p': [regions.Asia.id, regions.easternEurope.id]}
+        searchScope.searchSocieties();
+        expect(searchScope.disableSearchButton).toHaveBeenCalled();
+        expect(mockFindSocieties.find).toHaveBeenCalled();
+        //check callback function
+        expect(searchScope.enableSearchButton).toHaveBeenCalled();
+        expect(mockSearchModelService.searchCompletedCallback).toHaveBeenCalled();
+        expect(appScope.switchToResults).toHaveBeenCalled();
+    });
+    
+    //test error callback
+    it('should not search for societies', function() {
+        spyOn(mockFindSocieties, 'find').and.callFake(function(queryTerms, callbackFxn, errorFxn) {
+            queryDeferred.promise.then(function(r) {
+               searchScope.searchModel.results = r;
+               callbackFxn();
+            }, function(err) {
+                errorFxn();
+            });
+            queryDeferred.reject(); //we test searchCompletedCallback in the searchModelService test, so we'll just resolve the promise here to test controller logic
+            appScope.$apply();
+            return searchScope.searchModel.results;
+        });
+        
+        searchScope.searchModel.query = {'p': [regions.Asia.id, regions.easternEurope.id]}
+        searchScope.searchSocieties();
+        expect(searchScope.disableSearchButton).toHaveBeenCalled();
+        expect(mockFindSocieties.find).toHaveBeenCalled();
+        //check callback function
+        expect(searchScope.enableSearchButton).toHaveBeenCalled();
+        expect(searchScope.errors).toEqual("Invalid input.");
+        expect(mockSearchModelService.searchCompletedCallback).not.toHaveBeenCalled();
+        expect(appScope.switchToResults).not.toHaveBeenCalled();
+    });
+    
+
     it('should update search query + search', function() {
         //set up search parameters - geographic regions
         mockSearchModelService.getModel().getGeographicRegions().allRegions = [regions.Africa, regions.easternEurope, regions.Asia, regions.westernEurope];
@@ -451,7 +500,6 @@ describe('Testing search controller', function() {
             'l': [language2.id, language3.id, language1.id],
             'c': [[continuous_variable.id, 'gt', continuous_variable.vals], [variable_description.id, 'categorical', variable_description.codes.map(function(m) { return m.id; })]]
         }
-        
         searchScope.search();
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchQuery);
         expect(searchScope.searchSocieties).toHaveBeenCalled();
