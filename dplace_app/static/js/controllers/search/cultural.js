@@ -1,5 +1,4 @@
 function CulturalCtrl($scope, searchModelService) {
-    $scope.traits = [searchModelService.getModel().getCulturalTraits()];
 
     //keeps track of number of variables selected
     $scope.numVars =  function() {
@@ -8,7 +7,7 @@ function CulturalCtrl($scope, searchModelService) {
             trait.selectedVariables.forEach(function(v) {
                 if (v.data_type.toLowerCase() == 'continuous' || (v.codes && v.codes.filter(function(c) { return c.isSelected; }).length > 0)) $scope.numSelectedVars += 1;
             });
-        });    
+        });
     };
     
     $scope.$on('numVars', $scope.numVars);
@@ -21,4 +20,12 @@ function CulturalCtrl($scope, searchModelService) {
         }
         $scope.search();
     };
+    
+    /* reset search */
+    var linkModel = function() {
+        $scope.traits = [searchModelService.getModel().getCulturalTraits()];
+        $scope.numVars();
+    };
+    $scope.$on('searchModelReset', linkModel);
+    linkModel();
 }

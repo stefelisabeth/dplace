@@ -3,13 +3,9 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
         $scope.filters = searchModelService.getModel().getEnvironmentalData().filters;
         if ($scope.model.searchParams.selectedButton.value == 'cultural') {
             $scope.variables = [searchModelService.getModel().getCulturalTraits()];
-            $scope.count = 0;
+            $scope.count = 0; //what is this for???
         } else {
             $scope.variables = searchModelService.getModel().getEnvironmentalData().selectedVariables;
-            if ($scope.variables.length == 0) {
-                $scope.variables.push({'vals': ['', ''], 'selectedFilter': $scope.filters[0], 'categories': []});
-                $scope.variables[0].categories = searchModelService.getModel().getEnvironmentalData().categories;
-            }
         }
     };
     $scope.$on('searchModelReset', linkModel);
