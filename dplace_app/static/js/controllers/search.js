@@ -13,6 +13,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
     $scope.searchBySocietyButton = {text: 'Search', disabled: false};
     $scope.selectedButton = $scope.searchModel.selectedButton;
     $scope.searchCriteria = "View selected search criteria";
+    $scope.searchButton.errors = ""
 
     var rP = 'radioPlaces';
     var rL = 'radioLanguage';
@@ -36,16 +37,16 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
         }
     }
     $scope.buttons = [
-        {radioClass: rP, value:'geographic', name:'PLACES', badgeValue:
+        {radioClass: rP, value:'geographic', name:'PLACES', fullName: 'Geographic Region', badgeValue:
             function() { return $scope.searchModel.getGeographicRegions().badgeValue; }
         },
-        {radioClass: rL, value:'language', name:'LANGUAGE', badgeValue:
+        {radioClass: rL, value:'language', name:'LANGUAGE', fullName: 'Language Family', badgeValue:
             function() { return $scope.searchModel.getLanguageClassifications().badgeValue; }
         },
-        {radioClass: rC, value:'cultural', name:'CULTURE', badgeValue:
+        {radioClass: rC, value:'cultural', name:'CULTURE', fullName: 'Cultural Trait', badgeValue:
             function() { return $scope.searchModel.getCulturalTraits().badgeValue; }
         },
-        {radioClass: rE, value:'environmental', name:'ENVIRONMENT', badgeValue:
+        {radioClass: rE, value:'environmental', name:'ENVIRONMENT', fullName: 'Environmental Data', badgeValue:
             function() { return $scope.searchModel.getEnvironmentalData().badgeValue; }
         }
     ];
@@ -159,7 +160,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
     };
 
     var errorCallBack = function() {
-        $scope.errors = "Invalid input.";
+        $scope.searchButton.errors = "Invalid input.";
         $scope.enableSearchButton();
     };
 	
@@ -196,13 +197,13 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
         searchParams = searchModel.params;   
         searchQuery = {};
         for (var propertyName in searchParams) {
-            
             //get selected cultural traits/codes or environmental codes
            if (propertyName == 'culturalTraits' || propertyName == 'environmentalData') {
+               numVars = 0
                searchParams[propertyName].selectedVariables.forEach(function(variable) {
                    filters = [];
                     selectedVariable = (propertyName == 'culturalTraits') ? variable : variable.selectedVariable;
-                    if (!selectedVariable) return;
+                   if (!selectedVariable) return;
                    if (selectedVariable.data_type.toLowerCase() == 'continuous') {
                        filters = [
                         selectedVariable.id,
@@ -222,8 +223,13 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
                    if (filters.length > 0) {
                     if (propertyName.charAt(0) in searchQuery) searchQuery[propertyName.charAt(0)].push(filters);
                     else searchQuery[propertyName.charAt(0)] = [filters]
+                    numVars++;
                    }
                });
+               if (propertyName == 'culturalTraits' && numVars > 4) {
+                   $scope.searchButton.errors = "Error, search is limited to 4 variables";
+                    return;
+               }
                 
            }
             //get selected regions
@@ -262,7 +268,7 @@ function SearchCtrl($scope, $window, $location, colorMapService, searchModelServ
 
     // resets this object state and the search query.
     $scope.resetSearch = function() {
-        $scope.errors = "";
+        $scope.searchButton.errors = "";
         $scope.enableSearchButton();
         $scope.searchModel.reset();
         // send a notification so that the individual controllers reload their state

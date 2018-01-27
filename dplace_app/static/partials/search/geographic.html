@@ -38,31 +38,6 @@
 </script>
 
 <div ng-controller="GeographicCtrl"> 
-    <span class="form-inline clearfix">
-        <h4 class="pull-left">Search by Geographic Region</h4>
-        <div class="pull-right">
-                    
-            <button class="btn search-btn form-control"
-                    ng-disabled="searchButton.disabled"
-                    ng-click="resetSearch()">Reset
-            </button>
-            <button 
-                ng-show="searchModel.checkSelected()" 
-                class="btn search-btn" 
-                ng-disabled="searchButton.disabled"
-                ng-click="showCriteria()">
-                {{ searchCriteria }}
-            </button>
-            <button class="btn search-btn form-control"
-                        ng-disabled="searchButton.disabled"
-                        ng-click="doSearch()">{{ searchButton.text }}
-            </button>
-
-            <span class="alert alert-danger" ng-show="errors">
-                {{ errors }}
-            </span> 
-        </div>
-    </span>
     <form class="form form-inline" role="form" style="margin-top:20px;">
         <div class="panel panel-default">
             <div class="panel-heading">

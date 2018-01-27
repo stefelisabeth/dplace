@@ -15,7 +15,7 @@ function EnvironmentalCtrl($scope, searchModelService) {
     /* reset functions */
     var linkModel = function() {
         $scope.addVariable();
-    }
+    };
     
     $scope.$on('searchModelReset', linkModel);
     if (searchModelService.getModel().getEnvironmentalData().selectedVariables.length == 0) linkModel();

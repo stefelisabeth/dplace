@@ -65,7 +65,7 @@ describe('Testing environmental controller', function() {
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables.length).toEqual(2);
     });
     
-    it('should do search', function() {
+    /*it('should do search', function() {
         //set selected variables
         continuousVar = environmentals.variables.continuousEnvVar.variable;
         continuousVar.selectedFilter = {'operator': 'inrange'};
@@ -88,7 +88,7 @@ describe('Testing environmental controller', function() {
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalled();
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchQuery);
         expect(searchScope.searchSocieties).toHaveBeenCalled();
-    });
+    });*/
     
     it('should run linkModel after reset', function() {
         //set arbitrary values
