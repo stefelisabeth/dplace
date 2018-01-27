@@ -10,7 +10,6 @@ describe('Testing geographic search', function() {
 
         mockSearchModelService = searchModelService;
         mockAppCtrl = $controller('AppCtrl', {$scope: appScope, searchModelService: mockSearchModelService});
-        spyOn(appScope, 'setActive');
 		
 		regions = window.__fixtures__['regions'];
         mockColorMapService = colorMapService;
