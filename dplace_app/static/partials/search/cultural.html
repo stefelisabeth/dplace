@@ -7,31 +7,10 @@
 
 <div ng-controller="CulturalCtrl"> 
     <span class="form-inline clearfix">
-        <h4 class="pull-left">Search by Cultural Trait</h4>
-       <div class="pull-right">
-            <button class="btn search-btn form-control"
-                ng-disabled="searchButton.disabled"
-                ng-click="resetSearch()">Reset
-            </button>
-            <button ng-show="searchModel.checkSelected()" 
-                class="btn search-btn" 
-                ng-disabled="searchButton.disabled"
-                ng-click="showCriteria()">
-                {{ searchCriteria }}
-            </button>
-            <button class="btn btn- search-btn form-control"
-                ng-disabled="searchButton.disabled"
-                ng-click="doSearch()">{{ searchButton.text }}
-            </button>
-            <span class="alert alert-danger" ng-show="errors">
-                {{ errors }}
-            </span> 
-        </div>
-
+        <h5  class="pull-left" style="padding-left: 5mm !important;">Note: Search is limited to 4 cultural variables maximum</h5>
+        <h5 ng-show="numSelectedVars > 0 && !errors" style="padding-right:5mm !important" ng-class="{'text-danger': numSelectedVars > 4}" class="pull-right">Number of variables selected: {{ numSelectedVars }}</h5>
     </span>
-    <h5  class="pull-left" style="padding-left: 5mm !important;">Note: Search is limited to 4 cultural variables maximum</h5>
-    <h5 ng-show="numSelectedVars > 0 && !errors" style="padding-right:5mm !important" ng-class="{'text-danger': numSelectedVars > 4}" class="pull-right">Number of variables selected: {{ numSelectedVars }}</h5>
-    <div style="margin-top:30px;">
+    <div style="margin-top:-30px;">
     <ng-include src="'/static/partials/search/variable.html'"></ng-include>
     </div>
 </div>

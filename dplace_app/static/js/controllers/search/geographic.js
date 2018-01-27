@@ -8,9 +8,5 @@ function GeographicCtrl($scope, searchModelService) {
     };
     $scope.$on('searchModelReset', linkModel); // When model is reset, update our model
     linkModel();
-    
-    $scope.doSearch = function() {
-        $scope.search();
-    };
 
 }

@@ -450,7 +450,7 @@ describe('Testing search controller', function() {
         expect(mockFindSocieties.find).toHaveBeenCalled();
         //check callback function
         expect(searchScope.enableSearchButton).toHaveBeenCalled();
-        expect(searchScope.errors).toEqual("Invalid input.");
+        expect(searchScope.searchButton.errors).toEqual("Invalid input.");
         expect(mockSearchModelService.searchCompletedCallback).not.toHaveBeenCalled();
         expect(appScope.switchToResults).not.toHaveBeenCalled();
     });
@@ -510,7 +510,7 @@ describe('Testing search controller', function() {
     });
 
     it('should reset search', function() {
-        searchScope.errors = "dlfkjdlakfj"; //text string
+        searchScope.searchButton.errors = "dlfkjdlakfj"; //text string
         searchScope.searchButton.disabled = true;
         searchScope.searchButton.text = "Working...";
         
@@ -520,7 +520,7 @@ describe('Testing search controller', function() {
         appScope.$digest();
         
         searchScope.resetSearch();
-        expect(searchScope.errors).toBe("");
+        expect(searchScope.searchButton.errors).toBe("");
         expect(searchScope.enableSearchButton).toHaveBeenCalled();
         expect(mockSearchModelService.getModel().reset).toHaveBeenCalled();
         expect(searchScope.showCriteria).toHaveBeenCalled();

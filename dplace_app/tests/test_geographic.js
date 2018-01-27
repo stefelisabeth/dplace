@@ -10,7 +10,6 @@ describe('Testing geographic search', function() {
 
         mockSearchModelService = searchModelService;
         mockAppCtrl = $controller('AppCtrl', {$scope: appScope, searchModelService: mockSearchModelService});
-        spyOn(appScope, 'setActive');
 		
 		regions = window.__fixtures__['regions'];
         mockColorMapService = colorMapService;
@@ -59,7 +58,7 @@ describe('Testing geographic search', function() {
         geographicScope.$digest();
         expect(geographicScope.geographic.badgeValue).toEqual(2);
         
-        geographicScope.doSearch();
+        /*geographicScope.doSearch();
         expect(searchScope.search).toHaveBeenCalled();
         searchScope.$digest();
                 
@@ -68,6 +67,6 @@ describe('Testing geographic search', function() {
         };
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalled();
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchQuery);
-        expect(searchScope.searchSocieties).toHaveBeenCalled();
+        expect(searchScope.searchSocieties).toHaveBeenCalled();*/
     });
 });

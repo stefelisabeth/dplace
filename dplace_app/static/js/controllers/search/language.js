@@ -78,8 +78,4 @@ function LanguageCtrl($scope, searchModelService) {
             else scheme.languages.allSelected = false;
         }
     };
-
-    $scope.doSearch = function() {
-        $scope.search();
-    };
 }

@@ -81,6 +81,30 @@
                 </div>
             </div>
         <div id="search-panel" class="col-md-12">
+            <span class="form-inline clearfix">
+                <h4 class="pull-left">Search by {{ model.searchParams.selectedButton.fullName }}</h4>
+                <div class="pull-right">    
+                    <button class="btn search-btn form-control"
+                        ng-disabled="searchButton.disabled"
+                        ng-click="resetSearch()">Reset
+                    </button>
+                    <button 
+                        ng-show="searchModel.checkSelected()" 
+                        class="btn search-btn" 
+                        ng-disabled="searchButton.disabled"
+                        ng-click="showCriteria()">
+                        {{ searchCriteria }}
+                    </button>
+                    <button class="btn search-btn form-control"
+                        ng-disabled="searchButton.disabled"
+                        ng-click="search()">{{ searchButton.text }}
+                    </button>
+
+                    <span class="alert alert-danger" ng-show="searchButton.errors">
+                        {{ searchButton.errors }}
+                    </span> 
+                </div>
+            </span>
             <ng-include src="'/static/partials/search/' +  model.searchParams.selectedButton.value + '.html'"></ng-include>
         </div>
     </div>
