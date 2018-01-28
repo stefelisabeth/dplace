@@ -1,4 +1,4 @@
-describe('Testing environmental controller', function() {
+describe('Testing cultural controller', function() {
     var culturals, appScope, mockAppCtrl, searchScope, culturalScope, mockSearchCtrl, mockCulturalCtrl, mockSearchModelService, mockColorMapService, mockFindSocieties;
   
     beforeEach(function() {
