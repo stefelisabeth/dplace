@@ -41,9 +41,6 @@ describe('Testing geographic search', function() {
             .respond(200);
         $httpBackend.whenGET('/api/v1/languages?page_size=1000')
             .respond(200);
-        $httpBackend.whenPOST('/api/v1/find_societies')
-            .respond(200);
-
     }));
     
     it('should check that everything is defined', function() {
