@@ -93,11 +93,6 @@ describe('Testing environmental controller', function() {
     it('should run linkModel after reset', function() {
         //set arbitrary values
         mockSearchModelService.getModel().getEnvironmentalData().selectedVariables = [5, 6, 7, 8];
-        
-        expected = {'vals': ['', ''], 
-            'selectedFilter': mockSearchModelService.getModel().getEnvironmentalData().filters,
-            'categories': mockSearchModelService.getModel().getEnvironmentalData().categories
-        };
         searchScope.resetSearch();
         searchScope.$digest();
         
