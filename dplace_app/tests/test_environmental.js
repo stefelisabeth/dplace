@@ -93,10 +93,12 @@ describe('Testing environmental controller', function() {
     it('should run linkModel after reset', function() {
         //set arbitrary values
         mockSearchModelService.getModel().getEnvironmentalData().selectedVariables = [5, 6, 7, 8];
+        mockSearchModelService.getModel().getEnvironmentalData().badgeValue = 4;
         searchScope.resetSearch();
         searchScope.$digest();
         
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables.length).toEqual(1);
+        expect(mockSearchModelService.getModel().getEnvironmentalData().badgeValue).toEqual(0);
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables[0].vals).toEqual(['','']);
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables[0].selectedFilter).toEqual({ operator: 'inrange', name: 'between' });
         expect(mockSearchModelService.getModel().getEnvironmentalData().selectedVariables[0].categories).toEqual(mockSearchModelService.getModel().getEnvironmentalData().categories);
