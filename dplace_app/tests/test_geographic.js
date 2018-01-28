@@ -21,9 +21,6 @@ describe('Testing geographic search', function() {
             searchModelService: mockSearchModelService,
             FindSocieties: mockFindSocieties
         });
-        spyOn(searchScope, 'search').and.callThrough();
-        spyOn(mockSearchModelService, 'updateSearchQuery');
-        spyOn(searchScope, 'searchSocieties');
 
         geographicScope = searchScope.$new();
         
@@ -49,6 +46,10 @@ describe('Testing geographic search', function() {
 
     }));
     
+    it('should check that everything is defined', function() {
+        expect(geographicScope.geographic).toBeDefined();
+    });
+    
     it('should update badgeValue and call search', function() { 
         //test add region 
         geographicScope.geographic.selectedRegions.push(regions.easternEurope);
@@ -68,5 +69,19 @@ describe('Testing geographic search', function() {
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalled();
         expect(mockSearchModelService.updateSearchQuery).toHaveBeenCalledWith(expected_searchQuery);
         expect(searchScope.searchSocieties).toHaveBeenCalled();*/
+    });
+    
+    it('should call linkModel on reset', function() {
+        //set some arbitrary values
+        geographicScope.geographic.selectedRegions = [1, 2, 3, 4, 5];
+        geographicScope.geographic.badgeValue = 5;
+        
+        searchScope.resetSearch();
+        searchScope.$digest();
+        
+        //check that values have been reset
+        expect(geographicScope.geographic.selectedRegions).toEqual([]);
+        expect(geographicScope.geographic.badgeValue).toEqual(0);
+        
     });
 });
