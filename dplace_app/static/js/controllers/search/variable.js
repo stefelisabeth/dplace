@@ -1,18 +1,19 @@
 function VariableSearchCtrl($scope, searchModelService, getCategories, Variable, MinAndMax, CodeDescription) {
     var linkModel = function() {
         $scope.filters = searchModelService.getModel().getEnvironmentalData().filters;
-        if ($scope.model.searchParams.selectedButton.value == 'cultural') {
-            $scope.variables = [searchModelService.getModel().getCulturalTraits()];
-            $scope.count = 0; //what is this for???
-        } else {
-            $scope.variables = searchModelService.getModel().getEnvironmentalData().selectedVariables;
-        }
+        if ($scope.model.searchParams) {
+            if ($scope.model.searchParams.selectedButton.value == 'cultural') {
+                $scope.variables = [searchModelService.getModel().getCulturalTraits()];
+                $scope.count = 0; //what is this for???
+            } else {
+                $scope.variables = searchModelService.getModel().getEnvironmentalData().selectedVariables;
+            }
+        } else $scope.variables = [];
     };
     $scope.$on('searchModelReset', linkModel);
     linkModel();
-    
+
     $scope.sourceChanged = function(variable) {
-        variable.categories = [];
         variable.categories = getCategories.query({ query: { source: variable.selectedSource.id }});
     };
     
@@ -43,7 +44,7 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
                 if (selectedVariables.indexOf(variable.selectedVariable) == -1) {
                     variable.selectedVariable.codes = [];
                     getCodes = CodeDescription.query({variable: variable.selectedVariable.id});
-                    variable.selectedVariable.selected = []; 
+                    variable.selectedVariable.selected = []; // what is this for???
                     getCodes.$promise.then(function(result) {
                         result.forEach(function(c) {
                             c.isSelected = true;
