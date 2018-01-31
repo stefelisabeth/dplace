@@ -404,16 +404,13 @@ def get_categories(request):
     Filters categories for sources, as some categories are empty for some sources
     """
     query_dict = get_query_from_json(request)
-    categories = models.Category.objects.filter(type='cultural')
-    source_categories = []
+    categories = models.Category.objects.all()
     if 'source' in query_dict:
-        source = models.Source.objects.filter(id=query_dict['source'])
-        variables = models.Variable.objects.filter(source=source)
-        for c in categories:
-            if variables.filter(index_categories=c.id):
-                source_categories.append(c)
-        return Response(
-            serializers.CategorySerializer(source_categories, many=True).data)
+        category_ids = models.Variable.objects\
+                .filter(source__id=query_dict['source'])\
+                .prefetch_related('index_categories')\
+                .values_list('index_categories__id', flat=True)
+        categories = categories.filter(type='cultural', id__in=category_ids)
     return Response(serializers.CategorySerializer(categories, many=True).data)
 
 
