@@ -78,8 +78,9 @@ describe('Testing models.js', function() {
             { operator: 'all', name: 'all values'},
         ];
         
-        expect(parameters.culturalTraits.categories.length).toEqual(4);
-        expect(parameters.culturalTraits.categories.map(function(m) { return m.id; })).toEqual([1, 2, 3, 4]);
+        expect(parameters.culturalTraits.categories).toEqual([]);
+        //expect(parameters.culturalTraits.categories.length).toEqual(4);
+        //expect(parameters.culturalTraits.categories.map(function(m) { return m.id; })).toEqual([1, 2, 3, 4]);
         
         expect(parameters.culturalTraits.sources.length).toEqual(4);
         expect(parameters.culturalTraits.sources.map(function(m) { return m.id; })).toEqual([100, 101, 102, 103]);
