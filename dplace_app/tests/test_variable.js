@@ -3,13 +3,13 @@
 Tests VariableSearchCtrl for cultural variable search.
 Functions:
 
-linkModel
+linkModel - done
 sourceChanged - done
 categoryChanged - done
-variableChanged
-codeSelected
-filterChanged
-selectAll
+variableChanged - done
+codeSelected - done
+filterChanged - done
+selectAll - done
 
 */
 
@@ -73,6 +73,7 @@ describe('Testing variable controller for cultural variables', function() {
         spyOn(variableScope, 'filterChanged').and.callThrough();
         spyOn(variableScope, 'codeSelected').and.callThrough();
         spyOn(culturalScope, 'numVars');
+        spyOn(searchScope, 'removeFromSearch');
         
         culturals = window.__fixtures__['culturals'];
         
@@ -163,6 +164,7 @@ describe('Testing variable controller for cultural variables', function() {
     
     it('check starting values', function() {        
         expect(variableScope.variables).toEqual([mockSearchModelService.getModel().getCulturalTraits()]);
+        expect(variableScope.filters).toEqual(mockSearchModelService.getModel().getEnvironmentalData().filters);
         expect(variableScope.variables[0].sources.map(function(s) { return {"id": s.id, "name": s.name}; })).toEqual([{"id": 1, "name": "Ethnographic Atlas"}, {"id": 2,"name": "Binford Hunter-Gatherer"}]);
     });
     
@@ -193,6 +195,67 @@ describe('Testing variable controller for cultural variables', function() {
         expect(variableScope.variables[0].indexVariables.map(function(v) { return v.id;})).toEqual([95, 96, 97]);
     });
     
+    it('should test code selection', function() {
+        mockSearchModelService.getModel().getCulturalTraits().badgeValue = 3; //arbitrary value
+        
+        /* simple case */
+        v = culturals.variables.categoricalCulturalVar.variable;
+        v.codes = culturals.variables.categoricalCulturalVar.codes;
+        v.codes.forEach(function(c) { c.isSelected = false; });
+        c = culturals.variables.categoricalCulturalVar.codes[2];
+        c.isSelected = true;
+        v.allSelected = false;
+        variableScope.codeSelected(v, c);
+        expect(mockSearchModelService.getModel().getCulturalTraits().badgeValue).toEqual(4);
+        expect(v.allSelected).toBeFalsy();
+        expect(culturalScope.numVars).toHaveBeenCalled();
+    });
+    
+    it('should test code removal', function() {
+        mockSearchModelService.getModel().getCulturalTraits().badgeValue = 4;
+        v = culturals.variables.categoricalCulturalVar.variable;
+        v.codes = culturals.variables.categoricalCulturalVar.codes;
+        v.codes.forEach(function(c) { c.isSelected = true; });
+        v.codes[3].isSelected = false;
+        v.allSelected = true;
+        c = v.codes[3];
+        
+        variableScope.codeSelected(v, c);
+        expect(c.type).toEqual('c');
+        expect(searchScope.removeFromSearch).toHaveBeenCalled();
+        expect(searchScope.removeFromSearch).toHaveBeenCalledWith(c, 'code');
+        expect(v.allSelected).toBeFalsy();
+        expect(culturalScope.numVars).toHaveBeenCalled();
+        expect(mockSearchModelService.getModel().getCulturalTraits().badgeValue).toEqual(4); //shouldn't change this, this gets changed in removeFromSearch
+    });
+    
+    it('should test selectAll', function() {
+        v = culturals.variables.ordinalCulturalVar.variable;
+        v.codes = culturals.variables.ordinalCulturalVar.codes;
+        v.codes[0].isSelected = true;
+        v.allSelected = true;
+        variableScope.selectAll(v);
+        v.codes.forEach( function(c) {
+           expect(c.isSelected).toBeTruthy(); 
+        });
+        expect(variableScope.codeSelected).toHaveBeenCalled();
+        expect(variableScope.codeSelected.calls.count()).toEqual(3); //one was arleady selected
+    });
+    
+    it('should test removeAll', function() {
+        v = culturals.variables.ordinalCulturalVar.variable;
+        v.codes = culturals.variables.ordinalCulturalVar.codes;
+        v.allSelected = false;
+        v.codes.forEach(function(c) { c.isSelected = true; });
+        v.codes[0].isSelected = false;
+        variableScope.selectAll(v);
+        v.codes.forEach(function(c) {
+            expect(c.isSelected).toBeFalsy();
+        });
+        expect(variableScope.codeSelected).toHaveBeenCalled();
+        expect(variableScope.codeSelected.calls.count()).toEqual(3); //one was already not selected
+    });
+
     /* test variable selection */
     it('should not do anything if no variable is selected', function() {
         variableScope.variables[0].selectedVariable = null;
@@ -203,7 +266,6 @@ describe('Testing variable controller for cultural variables', function() {
         expect(mockMinNMax.query).not.toHaveBeenCalled();
         expect(variableScope.variables[0].selectedVariables.length).toEqual(0);
         expect(mockSearchModelService.getModel().getCulturalTraits().badgeValue).toEqual(0);
-        expect(variableScope.filterChanged).not.toHaveBeenCalled();
         expect(mockCodeDescription.query).not.toHaveBeenCalled();
         expect(variableScope.codeSelected).not.toHaveBeenCalled();
         expect(culturalScope.numVars).toHaveBeenCalled();
@@ -226,7 +288,6 @@ describe('Testing variable controller for cultural variables', function() {
         expect(culturalScope.numVars).toHaveBeenCalled();
         
         //shouldn't do these - these are for continuous variables
-        expect(variableScope.filterChanged).not.toHaveBeenCalled();
         expect(mockMinNMax.query).not.toHaveBeenCalled();
         expect(variableScope.values).not.toBeDefined();
     });
@@ -246,7 +307,6 @@ describe('Testing variable controller for cultural variables', function() {
         expect(variableScope.values).not.toBeDefined();
         expect(mockMinNMax.query).not.toHaveBeenCalled();
         expect(variableScope.variables[0].selectedVariables.length).toEqual(1);
-        expect(variableScope.filterChanged).not.toHaveBeenCalled();
         expect(mockCodeDescription.query).not.toHaveBeenCalled();
         expect(variableScope.codeSelected).not.toHaveBeenCalled();
         expect(culturalScope.numVars).toHaveBeenCalled();
@@ -256,6 +316,7 @@ describe('Testing variable controller for cultural variables', function() {
 
     it('should get starting values for continuous variable', function() {
         variableScope.variables[0].selectedVariable = culturals.variables.continuousCulturalVar.variable;
+        delete variableScope.variables[0].selectedVariable.vals;
         variableScope.variables[0].VariableForm = { $setPristine: function() {} };
         spyOn(variableScope.variables[0].VariableForm, '$setPristine');
         variableScope.variableChanged(variableScope.variables[0]);
@@ -266,11 +327,53 @@ describe('Testing variable controller for cultural variables', function() {
         expect(variableScope.values.min).toEqual(-17);
         expect(variableScope.values.max).toBeDefined();
         expect(variableScope.values.max).toEqual(35);
+        expect(variableScope.variables[0].selectedVariable.vals).toEqual([-17, 35]);
         expect(variableScope.variables[0].selectedVariable.selectedFilter).toEqual({ operator: 'inrange', name: 'between' });
         expect(variableScope.variables[0].VariableForm.$setPristine).toHaveBeenCalled();
         expect(variableScope.variables[0].selectedVariables.length).toEqual(1);
         expect(variableScope.variables[0].selectedVariables[0]).toEqual(variableScope.variables[0].selectedVariable);
         expect(mockSearchModelService.getModel().getCulturalTraits().badgeValue).toEqual(1);
-        expect(variableScope.filterChanged).toHaveBeenCalled();
+        expect(culturalScope.numVars).toHaveBeenCalled();
+        
+        /* check that it doesn't add this variable to selectedVariables again */
+        variableScope.variableChanged(variableScope.variables[0]);
+        expect(mockMinNMax.query.calls.count()).toEqual(1); //shouldn't have called a second time
+        expect(variableScope.variables[0].selectedVariables.length).toEqual(1);
+        expect(variableScope.variables[0].selectedVariables[0]).toEqual(variableScope.variables[0].selectedVariable);
+        expect(mockSearchModelService.getModel().getCulturalTraits().badgeValue).toEqual(1);
+        expect(variableScope.variables[0].selectedVariables[0].vals).toEqual([-17, 35]);
     });
+    
+        
+    it('should test filter changed - gt', function() {
+        variableScope.variables[0].selectedVariable = culturals.variables.continuousCulturalVar.variable;
+        variableScope.variables[0].selectedVariable.selectedFilter = {'operator': 'gt'};
+        variableScope.variables[0].selectedVariable.vals = [3, 16];
+        variableScope.variables[0].selectedVariables = [variableScope.variables[0].selectedVariable];
+        variableScope.filterChanged(variableScope.variables[0].selectedVariable);
+        expect(variableScope.variables[0].selectedVariable.vals).toEqual([3, 16]); //shouldn't change
+    });
+    
+    it('should test filter changed - all', function() {
+        variableScope.variables[0].selectedVariable = culturals.variables.continuousCulturalVar.variable;
+        variableScope.variables[0].selectedVariable.selectedFilter = {'operator': 'all'};
+        variableScope.variables[0].selectedVariable.vals = [3, 16];
+        variableScope.values = mockMinNMax.query({id: 66});
+        variableScope.variables[0].selectedVariables = [variableScope.variables[0].selectedVariable];
+        variableScope.filterChanged(variableScope.variables[0].selectedVariable);
+        httpBackend.flush();
+        expect(variableScope.variables[0].selectedVariable.vals).toEqual([-17, 35]); //should reset values to default
+    });
+    
+    it('should test linkModel after reset', function() {
+        //set some arbitrary values
+        variableScope.filters = [1, 2, 3, 4, 5];
+        variableScope.variables = [6, 7, 8];
+        searchScope.resetSearch();
+        searchScope.$digest();
+        expect(variableScope.filters).toEqual(mockSearchModelService.getModel().getEnvironmentalData().filters);
+        expect(variableScope.variables).toEqual([mockSearchModelService.getModel().getCulturalTraits()]);
+    });
+    
+    
 });
