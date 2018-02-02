@@ -4,7 +4,6 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
         if ($scope.model.searchParams) {
             if ($scope.model.searchParams.selectedButton.value == 'cultural') {
                 $scope.variables = [searchModelService.getModel().getCulturalTraits()];
-                $scope.count = 0; //what is this for???
             } else {
                 $scope.variables = searchModelService.getModel().getEnvironmentalData().selectedVariables;
             }
@@ -27,7 +26,11 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
     $scope.variableChanged = function(variable) {
         if (variable.selectedVariable != null) {
             if (variable.selectedVariable.data_type.toLowerCase() == 'continuous') {
+                if (variable.selectedVariable.vals) return; //don't get default values if we've gotten them before
                 $scope.values = MinAndMax.query({query: {id: variable.selectedVariable.id}});
+                $scope.values.$promise.then(function(v) {
+                    variable.selectedVariable.vals = [v.min, v.max];
+                });
                 variable.selectedVariable.selectedFilter = $scope.filters[0];
                 variable.VariableForm.$setPristine();
                 if ($scope.model.searchParams.selectedButton.value == 'cultural') {
@@ -38,13 +41,11 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
                 } else {
                     searchModelService.getModel().getEnvironmentalData().badgeValue = $scope.variables.map(function(v) { return v.selectedVariable; }).length;
                 }
-                $scope.filterChanged(variable);
             } else {                
                 selectedVariables = ($scope.model.searchParams.selectedButton.value == 'cultural') ? variable.selectedVariables : $scope.variables;
                 if (selectedVariables.indexOf(variable.selectedVariable) == -1) {
                     variable.selectedVariable.codes = [];
                     getCodes = CodeDescription.query({variable: variable.selectedVariable.id});
-                    variable.selectedVariable.selected = []; // what is this for???
                     getCodes.$promise.then(function(result) {
                         result.forEach(function(c) {
                             c.isSelected = true;
@@ -77,21 +78,12 @@ function VariableSearchCtrl($scope, searchModelService, getCategories, Variable,
     };
     
     $scope.filterChanged = function(variable) {
-        if (variable.VariableForm.$dirty && variable.selectedVariable.selectedFilter.operator != 'all') return; 
-        if ($scope.model.searchParams.selectedButton.value == 'cultural') {
-            selected_variable = variable.selectedVariables.filter(function(v) { 
-                return v.id == variable.selectedVariable.id;
-            });
-        } else {
-            selected_variable = $scope.variables.filter(function(v) { 
-                return v.selectedVariable.id == variable.selectedVariable.id;
-            }).map(function(v) { return v.selectedVariable; });
-        }
-        if (selected_variable.length == 1) {
-            $scope.values.$promise.then(function(result) {
-                selected_variable[0].vals = [result.min, result.max]
-            });
-        }
+        if (variable.selectedFilter.operator != 'all') return;
+        
+        if (!$scope.values) $scope.values = MinAndMax.query({query: {id: variable.id}});
+        $scope.values.$promise.then(function(result) {
+            variable.vals = [result.min, result.max];
+        });
     };
     
     $scope.selectAll = function(variable) {
