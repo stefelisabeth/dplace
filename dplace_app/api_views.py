@@ -215,7 +215,7 @@ def result_set_from_query_dict(query_dict):
         for varid, operator, params in criteria:
             if operator != 'categorical':
                 params = map(float, params)
-            if operator == 'inrange':
+            if operator == 'inrange' or operator == 'all':
                 sql_where.append("{0}.coded_value_float >= {1:f} AND {0}.coded_value_float <= {2:f}".format(alias, params[0], params[1]))
             elif operator == 'outrange':
                 sql_where.append("{0}.coded_value_float >= {1:f} OR {0}.coded_value_float <= {2:f}".format(alias, params[1], params[0]))
